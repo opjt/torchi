@@ -9,9 +9,10 @@ import (
 )
 
 type Env struct {
-	stageRaw string `ignored:"true"`
-	Stage    Stage  `ignored:"true"`
-	FrontUrl string `env:"FRONT_URL"`
+	stageRaw  string `ignored:"true"`
+	Stage     Stage  `ignored:"true"`
+	FrontUrl  string `env:"FRONT_URL"`
+	JWTSecret string `env:"JWT_SECRET"`
 
 	Log     Log     `env:", prefix=LOG_"`
 	Service Service `env:", prefix=SERVICE_"`
