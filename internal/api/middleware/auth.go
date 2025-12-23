@@ -1,14 +1,9 @@
 package middle
 
 import (
-	"context"
 	"net/http"
 	"ohp/internal/pkg/token"
 )
-
-type contextKey string
-
-const UserContextKey contextKey = "user"
 
 func AuthMiddleware(tp *token.TokenProvider) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -29,7 +24,7 @@ func AuthMiddleware(tp *token.TokenProvider) func(http.Handler) http.Handler {
 			}
 
 			// 3. Context에 유저 정보 저장 (컨트롤러에서 꺼내 쓸 수 있도록)
-			ctx := context.WithValue(r.Context(), UserContextKey, claims)
+			ctx := token.ContextWith(r.Context(), claims)
 
 			// 4. 다음 핸들러 실행
 			next.ServeHTTP(w, r.WithContext(ctx))

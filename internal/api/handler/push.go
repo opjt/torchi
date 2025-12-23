@@ -5,6 +5,7 @@ import (
 	"ohp/internal/api/wrapper"
 	"ohp/internal/domain/push"
 	"ohp/internal/pkg/log"
+	"ohp/internal/pkg/token"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -37,8 +38,15 @@ type reqSubscribe struct {
 
 // Subscribe, push subscribe
 func (h *PushHandler) Subscribe(ctx context.Context, req reqSubscribe) (interface{}, error) {
+	userClaim, err := token.UserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
+	h.log.Info("...", "user", userClaim.UserID)
+	h.log.Info("req", "sub", req)
 	if err := h.service.Subscribe(ctx, push.Subscription{
+		UserID:   userClaim.UserID,
 		Endpoint: req.Endpoint,
 		P256dh:   req.Keys.P256dh,
 		Auth:     req.Keys.Auth,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"ohp/internal/domain/token"
 	"ohp/internal/pkg/config"
 
 	"github.com/SherClockHolmes/webpush-go"
@@ -12,16 +13,27 @@ import (
 type PushService struct {
 	repo     SubscriptionRepository
 	vapidKey config.Vapid
+
+	tokenService *token.TokenService
 }
 
-func NewPushService(repo SubscriptionRepository, env config.Env) *PushService {
+func NewPushService(repo SubscriptionRepository, env config.Env, tokenService *token.TokenService) *PushService {
 	return &PushService{
-		repo:     repo,
-		vapidKey: env.Vapid,
+		repo:         repo,
+		vapidKey:     env.Vapid,
+		tokenService: tokenService,
 	}
 }
 
 func (s *PushService) Subscribe(ctx context.Context, sub Subscription) error {
+
+	if err := s.tokenService.Register(ctx, token.Token{
+		P256dh: sub.P256dh,
+		Auth:   sub.Auth,
+		UserID: sub.UserID,
+	}); err != nil {
+		return err
+	}
 
 	subs := &webpush.Subscription{
 		Endpoint: sub.Endpoint,

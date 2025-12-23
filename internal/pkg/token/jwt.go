@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 var (
@@ -15,8 +16,8 @@ var (
 
 // Claims 정의: 토큰에 담길 데이터
 type Claims struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
+	UserID uuid.UUID `json:"user_id"`
+	Email  string    `json:"email"`
 	jwt.RegisteredClaims
 }
 
@@ -37,7 +38,7 @@ func NewTokenProvider(secret string, issuer string, expiry time.Duration) *Token
 }
 
 // Create: 새로운 토큰 생성
-func (p *TokenProvider) Create(userID string, email string) (string, error) {
+func (p *TokenProvider) Create(userID uuid.UUID, email string) (string, error) {
 	claims := &Claims{
 		UserID: userID,
 		Email:  email,

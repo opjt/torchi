@@ -10,6 +10,15 @@ import (
 	"github.com/google/uuid"
 )
 
+type PushToken struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	P256dhKey string
+	AuthKey   string
+	IsActive  bool
+	CreatedAt time.Time
+}
+
 type User struct {
 	ID        uuid.UUID
 	Email     string

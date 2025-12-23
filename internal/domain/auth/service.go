@@ -51,7 +51,7 @@ func (s *AuthService) OauthGithubFlow(ctx context.Context, code string) (token s
 		return token, err
 	}
 
-	token, err = s.tokenProvider.Create(dbUser.ID.String(), dbUser.Email)
+	token, err = s.tokenProvider.Create(dbUser.ID, dbUser.Email)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate service token: %w", err)
 	}

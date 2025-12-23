@@ -10,7 +10,7 @@ CREATE TABLE
 -- services
 CREATE TABLE
     services (
-        id UUID PRIMARY KEY,
+        id UUID PRIMARY KEY DEFAULT uuidv7(),
         name TEXT NOT NULL,
         service_key TEXT NOT NULL UNIQUE,
         endpoint TEXT NOT NULL,
