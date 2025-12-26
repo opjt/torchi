@@ -44,3 +44,36 @@ func (q *Queries) CreateEndpoint(ctx context.Context, arg CreateEndpointParams) 
 	)
 	return i, err
 }
+
+const findByUserID = `-- name: FindByUserID :many
+SELECT id, user_id, name, endpoint, notification_enabled, notification_disabled_at, created_at FROM endpoints
+WHERE user_id = $1
+`
+
+func (q *Queries) FindByUserID(ctx context.Context, userID uuid.UUID) ([]Endpoint, error) {
+	rows, err := q.db.Query(ctx, findByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Endpoint
+	for rows.Next() {
+		var i Endpoint
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Name,
+			&i.Endpoint,
+			&i.NotificationEnabled,
+			&i.NotificationDisabledAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

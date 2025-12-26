@@ -20,6 +20,13 @@ func NewEndpointService(
 	}
 }
 
+func (s *EndpointService) List(ctx context.Context) ([]Endpoint, error) {
+	userClaim, err := token.UserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.FindByUserID(ctx, userClaim.UserID)
+}
 func (s *EndpointService) Add(ctx context.Context, serviceName string) error {
 
 	userClaim, err := token.UserFromContext(ctx)

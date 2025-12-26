@@ -9,3 +9,7 @@ INSERT INTO endpoints (
     $3
 )
 RETURNING *;
+
+-- name: FindByUserID :many
+SELECT * FROM endpoints
+WHERE user_id = $1;
