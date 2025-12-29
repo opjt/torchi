@@ -13,6 +13,7 @@ type AuthHandler struct {
 	log      *log.Logger
 	frontUrl string
 	service  *auth.AuthService
+	env      config.Env
 }
 
 const cookieKey = "auth_token"
@@ -22,6 +23,7 @@ func NewAuthHandler(log *log.Logger, env config.Env, service *auth.AuthService) 
 		log:      log,
 		frontUrl: env.FrontUrl,
 		service:  service,
+		env:      env,
 	}
 }
 func (h *AuthHandler) Routes() chi.Router {
@@ -29,11 +31,29 @@ func (h *AuthHandler) Routes() chi.Router {
 	r.Get("/github/callback", h.OauthGithubCallback)
 	r.Get("/logout", h.Logout)
 
+	if h.env.Stage == config.StageDev {
+		r.Get("/fake/login", h.FakeLogin)
+	}
+
 	return r
 }
 
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, h.frontUrl+"/login", http.StatusFound)
+func (h *AuthHandler) FakeLogin(w http.ResponseWriter, r *http.Request) {
+	token, err := h.service.TestLogin(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     cookieKey,
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	})
+	http.Redirect(w, r, h.frontUrl+"/", http.StatusFound)
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
@@ -75,5 +95,5 @@ func (h *AuthHandler) OauthGithubCallback(w http.ResponseWriter, r *http.Request
 		MaxAge:   3600 * 24, // 1일
 	})
 
-	http.Redirect(w, r, h.frontUrl+"/p", http.StatusFound)
+	http.Redirect(w, r, h.frontUrl+"/", http.StatusFound)
 }

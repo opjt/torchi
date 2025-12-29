@@ -9,6 +9,8 @@ import (
 	"ohp/internal/domain/user"
 	"ohp/internal/pkg/config"
 	"ohp/internal/pkg/token"
+
+	"github.com/google/uuid"
 )
 
 type AuthService struct {
@@ -28,6 +30,18 @@ func NewAuthService(
 		userService:   userService,
 		tokenProvider: tokenProvider,
 	}
+}
+func (s *AuthService) TestLogin(ctx context.Context) (string, error) {
+
+	userID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	email := "tester@gmail.com"
+
+	token, err := s.tokenProvider.Create(userID, email)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate service token: %w", err)
+	}
+	return token, nil
+
 }
 
 // TODO: 플랫폼별 분리가 필요함(Github, ...)
