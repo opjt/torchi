@@ -66,7 +66,7 @@ func (s *PushService) Unsubscribe(ctx context.Context, sub Subscription) error {
 }
 
 // Push notification using endpoint token
-func (s *PushService) Push(ctx context.Context, endpointToken string) (uint64, error) {
+func (s *PushService) Push(ctx context.Context, endpointToken string, message string) (uint64, error) {
 	var count uint64
 
 	endpoint, err := s.endpointService.FindByToken(ctx, endpointToken)
@@ -84,7 +84,7 @@ func (s *PushService) Push(ctx context.Context, endpointToken string) (uint64, e
 	}
 
 	for _, token := range tokens {
-		if err := s.pushNotification(token, "title1", "body4"); err != nil {
+		if err := s.pushNotification(token, endpoint.Name, message); err != nil {
 			return count, err
 		}
 		count = count + 1
