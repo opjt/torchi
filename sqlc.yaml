@@ -16,7 +16,7 @@ overrides:
         nullable: true
 sql:
   - schema: "db/schema/"
-    queries: ["internal/domain/auth", "internal/domain/user", "internal/domain/token", "internal/domain/endpoint"]
+    queries: ["internal/domain/auth", "internal/domain/user", "internal/domain/token", "internal/domain/endpoint", "internal/domain/notifications"]
     engine: "postgresql" 
     gen:
       go:

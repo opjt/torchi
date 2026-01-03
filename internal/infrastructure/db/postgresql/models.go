@@ -20,6 +20,16 @@ type Endpoint struct {
 	CreatedAt              time.Time
 }
 
+type Notification struct {
+	ID        uuid.UUID
+	ServiceID uuid.UUID
+	Body      string
+	IsRead    bool
+	ReadAt    *time.Time
+	IsDeleted bool
+	CreatedAt time.Time
+}
+
 type PushToken struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID

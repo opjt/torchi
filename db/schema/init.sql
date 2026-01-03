@@ -34,3 +34,15 @@ CREATE TABLE
         CONSTRAINT endpoints_user_name_uniq
         UNIQUE (user_id, name)
     );
+
+-- notifications
+CREATE TABLE
+    notifications (
+        id UUID PRIMARY KEY DEFAULT uuidv7(),
+        service_id UUID NOT NULL REFERENCES endpoints (id),
+        body TEXT NOT NULL,
+        is_read BOOLEAN NOT NULL DEFAULT false, 
+        read_at TIMESTAMP NULL,
+        is_deleted BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMP NOT NULL DEFAULT now()
+    );

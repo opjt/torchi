@@ -3,6 +3,7 @@ package domain
 import (
 	"ohp/internal/domain/auth"
 	"ohp/internal/domain/endpoint"
+	"ohp/internal/domain/notifications"
 	"ohp/internal/domain/push"
 	"ohp/internal/domain/token"
 	"ohp/internal/domain/user"
@@ -17,4 +18,5 @@ var Module = fx.Options(
 	user.Module,
 	token.Module,
 	endpoint.Module,
+	notifications.Module,
 )
