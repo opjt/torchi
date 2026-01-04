@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"context"
+	"io"
+	"net/http"
 	"ohp/internal/api/wrapper"
 	"ohp/internal/domain/push"
 	"ohp/internal/pkg/config"
@@ -28,25 +29,40 @@ func NewApiHandler(
 }
 func (h *ApiHandler) Routes() chi.Router {
 	r := chi.NewRouter()
-	r.Post("/push/{token}", wrapper.WrapJson(h.Push, h.log.Error, wrapper.RespondJSON))
+	r.Post("/push/{token}", h.Push)
 
 	return r
 }
 
-type reqPush struct {
-	Body string `json:"body"`
-}
 type resPush struct {
 	Sent uint64 `json:"sent"`
 }
 
-func (h *ApiHandler) Push(ctx context.Context, req reqPush) (interface{}, error) {
+func (h *ApiHandler) Push(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	token := chi.URLParamFromCtx(ctx, "token")
 	h.log.Info("...", "token", token)
-	count, err := h.service.Push(ctx, token, req.Body)
+
+	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		return nil, err
+		http.Error(w, "Failed to read body", http.StatusInternalServerError)
+		return
+	}
+	defer r.Body.Close()
+
+	message := string(bodyBytes)
+	if message == "" {
+		http.Error(w, "Message body is empty", http.StatusBadRequest)
+		return
 	}
 
-	return resPush{Sent: count}, nil
+	count, err := h.service.Push(ctx, token, message)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	wrapper.RespondJSON(w, http.StatusOK, resPush{
+		Sent: count,
+	})
 }
