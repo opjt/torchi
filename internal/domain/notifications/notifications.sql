@@ -39,3 +39,11 @@ WHERE n.user_id = $1
   AND (sqlc.narg('last_id')::uuid IS NULL OR n.id < sqlc.narg('last_id'))
 ORDER BY n.id DESC
 LIMIT $2;
+
+-- name: MarkNotificationsAsReadBefore :exec
+UPDATE notifications
+SET is_read = true,
+    read_at = now()
+WHERE user_id = $1 
+  AND is_read = false 
+  AND id >= $2; 

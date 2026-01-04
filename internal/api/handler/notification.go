@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"ohp/internal/api/wrapper"
 	"ohp/internal/domain/notifications"
@@ -33,44 +34,30 @@ func NewNotiHandler(
 func (h *NotiHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", h.GetList)
+	r.Post("/read-until", wrapper.WrapJson(h.Read, h.log.Error, wrapper.RespondJSON))
 
 	return r
 }
 
-// type resNoti struct {
-// 	EndpointName string    `json:"endpoint_name"`
-// 	Body         string    `json:"body"`
-// 	IsRead       bool      `json:"is_read"`
-// 	CreatedAt    time.Time `json:"created_at"`
-// }
+type reqReadNoti struct {
+	LastID uuid.UUID `json:"last_id"`
+}
 
-// func (h *NotiHandler) GetList(w http.ResponseWriter, r *http.Request) {
-// 	ctx := r.Context()
-// 	userClaim, err := token.UserFromContext(ctx)
-// 	if err != nil {
-// 		wrapper.RespondJSON(w, http.StatusInternalServerError, err)
-// 		return
-// 	}
-// 	notis, err := h.service.GetList(ctx, userClaim.UserID)
-// 	if err != nil {
-// 		wrapper.RespondJSON(w, http.StatusInternalServerError, err)
-// 		return
-// 	}
+func (h *NotiHandler) Read(ctx context.Context, req reqReadNoti) (interface{}, error) {
+	h.log.Info("...", "last_id", req.LastID)
+	userClaim, err := token.UserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-// 	resp := make([]resNoti, len(notis))
-// 	for i, noti := range notis {
-// 		resp[i] = resNoti{
-// 			EndpointName: noti.EndpointInfo.Name,
-// 			Body:         noti.Noti.Body,
-// 			IsRead:       noti.Noti.IsRead,
-// 			CreatedAt:    noti.Noti.CreatedAt,
-// 		}
-// 	}
+	err = h.service.MarkAllAsRead(ctx, userClaim.UserID, req.LastID)
+	if err != nil {
+		return nil, err
+	}
 
-// 	wrapper.RespondJSON(w, http.StatusOK, resp)
-// }
+	return nil, nil
+}
 
-// 개별 알림 응답 DTO
 type resNoti struct {
 	ID           uuid.UUID `json:"id"` // 클라이언트가 커서로 쓸 ID
 	EndpointName string    `json:"endpoint_name"`

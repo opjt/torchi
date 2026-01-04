@@ -167,6 +167,25 @@ func (q *Queries) GetNotificationsWithCursor(ctx context.Context, arg GetNotific
 	return items, nil
 }
 
+const markNotificationsAsReadBefore = `-- name: MarkNotificationsAsReadBefore :exec
+UPDATE notifications
+SET is_read = true,
+    read_at = now()
+WHERE user_id = $1 
+  AND is_read = false 
+  AND id >= $2
+`
+
+type MarkNotificationsAsReadBeforeParams struct {
+	UserID uuid.UUID
+	ID     uuid.UUID
+}
+
+func (q *Queries) MarkNotificationsAsReadBefore(ctx context.Context, arg MarkNotificationsAsReadBeforeParams) error {
+	_, err := q.db.Exec(ctx, markNotificationsAsReadBefore, arg.UserID, arg.ID)
+	return err
+}
+
 const updateStatusNotification = `-- name: UpdateStatusNotification :exec
 UPDATE notifications
 SET status = $2

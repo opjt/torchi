@@ -17,6 +17,9 @@ func NewNotiService(
 		repo: repo,
 	}
 }
+func (s *NotiService) MarkAllAsRead(ctx context.Context, userID uuid.UUID, lastID uuid.UUID) error {
+	return s.repo.MarkAsReadBefore(ctx, userID, lastID)
+}
 
 func (s *NotiService) GetList(ctx context.Context, userID uuid.UUID) ([]NotiWithEndpoint, error) {
 	return s.repo.GetList(ctx, userID)

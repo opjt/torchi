@@ -16,12 +16,20 @@ type NotiRepository interface {
 	UpdateStatus(context.Context, Noti) error
 	GetList(context.Context, uuid.UUID) ([]NotiWithEndpoint, error)
 	GetWithCursor(ctx context.Context, userID uuid.UUID, lastID *uuid.UUID, limit int32) ([]NotiWithEndpoint, error)
+	MarkAsReadBefore(ctx context.Context, userID uuid.UUID, lastID uuid.UUID) error
 }
 
 func NewNotiRepository(queries *db.Queries) NotiRepository {
 	return &notiRepository{
 		queries: queries,
 	}
+}
+
+func (r *notiRepository) MarkAsReadBefore(ctx context.Context, userID uuid.UUID, lastID uuid.UUID) error {
+	return r.queries.MarkNotificationsAsReadBefore(ctx, db.MarkNotificationsAsReadBeforeParams{
+		UserID: userID,
+		ID:     lastID,
+	})
 }
 
 func (r *notiRepository) GetWithCursor(ctx context.Context, userID uuid.UUID, lastID *uuid.UUID, limit int32) ([]NotiWithEndpoint, error) {
