@@ -33,7 +33,7 @@ func NewApiHandler(
 func (h *ApiHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/push/{token}", h.Push)
-	r.Post("/push/test", wrapper.WrapJson(h.TestPush, h.log.Error, wrapper.RespondJSON))
+	r.Post("/push-test", wrapper.WrapJson(h.TestPush, h.log.Error, wrapper.RespondJSON))
 
 	return r
 }
