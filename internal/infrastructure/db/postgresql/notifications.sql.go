@@ -168,15 +168,17 @@ SELECT
 FROM notifications n
 WHERE n.user_id = $1 
   AND n.is_deleted = false
-  AND ($3::uuid IS NULL OR n.id < $3)
+  AND ($3::uuid IS NULL OR n.endpoint_id = $3)
+  AND ($4::uuid IS NULL OR n.id < $4)
 ORDER BY n.id DESC
 LIMIT $2
 `
 
 type GetNotificationsWithCursorParams struct {
-	UserID uuid.UUID
-	Limit  int32
-	LastID *uuid.UUID
+	UserID     uuid.UUID
+	Limit      int32
+	EndpointID *uuid.UUID
+	LastID     *uuid.UUID
 }
 
 type GetNotificationsWithCursorRow struct {
@@ -191,7 +193,12 @@ type GetNotificationsWithCursorRow struct {
 }
 
 func (q *Queries) GetNotificationsWithCursor(ctx context.Context, arg GetNotificationsWithCursorParams) ([]GetNotificationsWithCursorRow, error) {
-	rows, err := q.db.Query(ctx, getNotificationsWithCursor, arg.UserID, arg.Limit, arg.LastID)
+	rows, err := q.db.Query(ctx, getNotificationsWithCursor,
+		arg.UserID,
+		arg.Limit,
+		arg.EndpointID,
+		arg.LastID,
+	)
 	if err != nil {
 		return nil, err
 	}

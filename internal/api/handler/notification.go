@@ -103,6 +103,13 @@ func (h *NotiHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	// 1. 쿼리 파라미터 파싱 (cursor & limit)
 	cursorStr := r.URL.Query().Get("cursor")
 	limitStr := r.URL.Query().Get("limit")
+	endpointIdStr := r.URL.Query().Get("endpoint_id") // endpoint 필터링
+	var endpointID *uuid.UUID
+	if endpointIdStr != "" { // 프론트에서 ALL을 보낼 경우 대비
+		if parsed, err := uuid.Parse(endpointIdStr); err == nil {
+			endpointID = &parsed
+		}
+	}
 
 	var lastID *uuid.UUID
 	if cursorStr != "" {
@@ -116,7 +123,7 @@ func (h *NotiHandler) GetList(w http.ResponseWriter, r *http.Request) {
 		limit = min(l, 100) // 최대치 제한
 	}
 
-	notis, err := h.service.GetListWithCursor(ctx, userClaim.UserID, lastID, int32(limit))
+	notis, err := h.service.GetListWithCursor(ctx, userClaim.UserID, lastID, int32(limit), endpointID)
 	if err != nil {
 		wrapper.RespondJSON(w, http.StatusInternalServerError, err)
 		return

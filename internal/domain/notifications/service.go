@@ -25,9 +25,9 @@ func (s *NotiService) MarkAllAsRead(ctx context.Context, userID uuid.UUID, lastI
 	return s.repo.MarkAsReadBefore(ctx, userID, lastID)
 }
 
-func (s *NotiService) GetListWithCursor(ctx context.Context, userID uuid.UUID, lastID *uuid.UUID, limit int32) ([]Noti, error) {
+func (s *NotiService) GetListWithCursor(ctx context.Context, userID uuid.UUID, lastID *uuid.UUID, limit int32, endpointID *uuid.UUID) ([]Noti, error) {
 
-	return s.repo.GetWithCursor(ctx, userID, lastID, limit)
+	return s.repo.GetWithCursor(ctx, userID, lastID, limit, endpointID)
 }
 
 type ReqRegister struct {
