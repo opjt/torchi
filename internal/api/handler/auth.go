@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"ohp/internal/api/wrapper"
 	"ohp/internal/domain/auth"
 	"ohp/internal/pkg/config"
 	"ohp/internal/pkg/log"
@@ -66,7 +67,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   -1,
 	})
-	http.Redirect(w, r, h.frontUrl, http.StatusFound)
+	wrapper.RespondJSON(w, http.StatusOK, nil)
 
 }
 func (h *AuthHandler) OauthGithubCallback(w http.ResponseWriter, r *http.Request) {
