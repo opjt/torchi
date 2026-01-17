@@ -4,13 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"ohp/internal/domain/common"
 )
 
+type ErrorDetail struct {
+	//TODO: common.DomainError로 대체할지 고민..
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
 type APIResponse struct {
-	Code    int         `json:"code"`
-	Success bool        `json:"success"`
-	Data    interface{} `json:"data,omitempty"`
-	Error   string      `json:"error,omitempty"`
+	Code    int          `json:"code"`
+	Success bool         `json:"success"`
+	Data    interface{}  `json:"data,omitempty"`
+	Error   *ErrorDetail `json:"error,omitempty"`
 }
 
 func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
@@ -22,10 +28,21 @@ func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
 		Success: status >= 200 && status < 300,
 	}
 
-	if errObj, ok := payload.(error); ok {
-		resp.Error = errObj.Error()
-	} else {
-		resp.Data = payload
+	if payload != nil {
+		switch v := payload.(type) {
+		case *common.DomainError:
+			resp.Error = &ErrorDetail{
+				Code:    v.Code,
+				Message: v.Message,
+			}
+		case error: // 일반적인 Go 에러일 때 (예상치 못한 에러)
+			resp.Error = &ErrorDetail{
+				Code:    "INTERNAL_SERVER_ERROR",
+				Message: v.Error(),
+			}
+		default: // 성공 데이터일 때
+			resp.Data = payload
+		}
 	}
 
 	_ = json.NewEncoder(w).Encode(resp)

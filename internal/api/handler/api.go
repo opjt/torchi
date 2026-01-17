@@ -91,7 +91,7 @@ func (h *ApiHandler) Demo(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusForbidden) // 403
 
 	_ = json.NewEncoder(w).Encode(response)
-	return
+
 }
 
 type resPush struct {
