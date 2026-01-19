@@ -67,6 +67,10 @@ func (h *UserHandler) Whoami(w http.ResponseWriter, r *http.Request) {
 		wrapper.RespondJSON(w, http.StatusInternalServerError, err)
 		return
 	}
+	if user == nil {
+		wrapper.RespondJSON(w, http.StatusInternalServerError, "user not found")
+		return
+	}
 	h.log.Debug("...", "user", user)
 
 	resp := resWhoami{
