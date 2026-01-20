@@ -3,9 +3,9 @@ package middle
 import (
 	"context"
 	"net/http"
-	"ohp/internal/pkg/log"
 	"sync"
 	"time"
+	"torchi/internal/pkg/log"
 
 	"go.uber.org/fx"
 	"golang.org/x/time/rate"

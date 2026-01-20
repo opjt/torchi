@@ -3,8 +3,8 @@ package endpoint
 import (
 	"context"
 	"errors"
-	db "ohp/internal/infrastructure/db/postgresql"
 	"time"
+	db "torchi/internal/infrastructure/db/postgresql"
 
 	"github.com/google/uuid"
 )

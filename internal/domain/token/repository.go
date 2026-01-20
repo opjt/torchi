@@ -2,7 +2,7 @@ package token
 
 import (
 	"context"
-	db "ohp/internal/infrastructure/db/postgresql"
+	db "torchi/internal/infrastructure/db/postgresql"
 
 	"github.com/google/uuid"
 )

@@ -3,8 +3,8 @@ package endpoint
 import (
 	"context"
 	"errors"
-	"ohp/internal/pkg/token"
 	"time"
+	"torchi/internal/pkg/token"
 )
 
 const endpointLength = 11

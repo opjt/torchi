@@ -1,7 +1,7 @@
 package db
 
 import (
-	"ohp/internal/infrastructure/db/postgresql"
+	"torchi/internal/infrastructure/db/postgresql"
 
 	"go.uber.org/fx"
 )

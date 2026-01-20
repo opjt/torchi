@@ -12,14 +12,14 @@ COPY . .
 
 # static binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -o ohp
+    go build -o torchi
 
 # 2. runtime stage
 FROM gcr.io/distroless/base-debian12
 
 WORKDIR /app
-COPY --from=builder /app/ohp .
+COPY --from=builder /app/torchi .
 
 
 USER nonroot:nonroot
-ENTRYPOINT ["/app/ohp"]
+ENTRYPOINT ["/app/torchi"]

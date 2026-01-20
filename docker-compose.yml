@@ -5,9 +5,9 @@ services:
     container_name: dev-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ohp
-      POSTGRES_PASSWORD: ohp
-      POSTGRES_DB: ohp
+      POSTGRES_USER: torchi
+      POSTGRES_PASSWORD: torchi
+      POSTGRES_DB: torchi
     ports:
       - "5432:5432"
     volumes:

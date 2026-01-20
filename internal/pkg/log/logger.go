@@ -2,8 +2,8 @@ package log
 
 import (
 	"log/slog"
-	"ohp/internal/pkg/config"
 	"os"
+	"torchi/internal/pkg/config"
 )
 
 // Logger Struct

@@ -1,12 +1,12 @@
 package domain
 
 import (
-	"ohp/internal/domain/auth"
-	"ohp/internal/domain/endpoint"
-	"ohp/internal/domain/notifications"
-	"ohp/internal/domain/push"
-	"ohp/internal/domain/token"
-	"ohp/internal/domain/user"
+	"torchi/internal/domain/auth"
+	"torchi/internal/domain/endpoint"
+	"torchi/internal/domain/notifications"
+	"torchi/internal/domain/push"
+	"torchi/internal/domain/token"
+	"torchi/internal/domain/user"
 
 	"go.uber.org/fx"
 )

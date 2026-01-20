@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"ohp/internal/domain/user"
-	"ohp/internal/pkg/config"
-	"ohp/internal/pkg/token"
+	"torchi/internal/domain/user"
+	"torchi/internal/pkg/config"
+	"torchi/internal/pkg/token"
 
 	"github.com/google/uuid"
 )

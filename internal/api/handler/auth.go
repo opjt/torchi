@@ -2,10 +2,10 @@ package handler
 
 import (
 	"net/http"
-	"ohp/internal/api/wrapper"
-	"ohp/internal/domain/auth"
-	"ohp/internal/pkg/config"
-	"ohp/internal/pkg/log"
+	"torchi/internal/api/wrapper"
+	"torchi/internal/domain/auth"
+	"torchi/internal/pkg/config"
+	"torchi/internal/pkg/log"
 
 	"github.com/go-chi/chi/v5"
 )

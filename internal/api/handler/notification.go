@@ -3,13 +3,13 @@ package handler
 import (
 	"context"
 	"net/http"
-	"ohp/internal/api/wrapper"
-	"ohp/internal/domain/notifications"
-	"ohp/internal/pkg/config"
-	"ohp/internal/pkg/log"
-	"ohp/internal/pkg/token"
 	"strconv"
 	"time"
+	"torchi/internal/api/wrapper"
+	"torchi/internal/domain/notifications"
+	"torchi/internal/pkg/config"
+	"torchi/internal/pkg/log"
+	"torchi/internal/pkg/token"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"

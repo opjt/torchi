@@ -3,9 +3,9 @@ package postgresql
 import (
 	"context"
 	"fmt"
-	"ohp/internal/pkg/config"
-	"ohp/internal/pkg/log"
 	"time"
+	"torchi/internal/pkg/config"
+	"torchi/internal/pkg/log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/fx"

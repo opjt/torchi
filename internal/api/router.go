@@ -1,10 +1,10 @@
 package api
 
 import (
-	"ohp/internal/api/handler"
-	middle "ohp/internal/api/middleware"
-	"ohp/internal/pkg/config"
-	"ohp/internal/pkg/token"
+	"torchi/internal/api/handler"
+	middle "torchi/internal/api/middleware"
+	"torchi/internal/pkg/config"
+	"torchi/internal/pkg/token"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"

@@ -2,10 +2,10 @@ package handler
 
 import (
 	"context"
-	"ohp/internal/api/wrapper"
-	"ohp/internal/domain/push"
-	"ohp/internal/pkg/log"
-	"ohp/internal/pkg/token"
+	"torchi/internal/api/wrapper"
+	"torchi/internal/domain/push"
+	"torchi/internal/pkg/log"
+	"torchi/internal/pkg/token"
 
 	"github.com/go-chi/chi/v5"
 )

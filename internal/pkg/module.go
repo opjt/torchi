@@ -1,9 +1,9 @@
 package pkg
 
 import (
-	"ohp/internal/pkg/config"
-	"ohp/internal/pkg/token"
 	"time"
+	"torchi/internal/pkg/config"
+	"torchi/internal/pkg/token"
 
 	"go.uber.org/fx"
 )
@@ -15,10 +15,12 @@ var Module = fx.Options(
 			// TODO: env에서 넣어주도록 개선
 			return token.NewTokenProvider(
 				env.JWTSecret, // secret
-				"ohp-api",     // issuer
+				"torchi-api",  // issuer
 
 				2*time.Hour,     // accessExpiry 2hour
 				23*24*time.Hour, // refreshExpiry 23day
+				// 3*time.Second,
+				// 20*time.Second,
 			)
 		},
 	),

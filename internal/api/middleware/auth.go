@@ -2,8 +2,8 @@ package middle
 
 import (
 	"net/http"
-	"ohp/internal/api/handler"
-	"ohp/internal/pkg/token"
+	"torchi/internal/api/handler"
+	"torchi/internal/pkg/token"
 )
 
 func AuthMiddleware(tp *token.TokenProvider) func(http.Handler) http.Handler {

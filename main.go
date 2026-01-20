@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"ohp/cmd"
-	"ohp/internal/core"
 	"os"
+	"torchi/cmd"
+	"torchi/internal/core"
 )
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("use: ohp <command> [options]")
+		fmt.Println("use: torchi <command> [options]")
 		os.Exit(1)
 	}
 

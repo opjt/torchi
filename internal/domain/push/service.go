@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"ohp/internal/domain/endpoint"
-	"ohp/internal/domain/notifications"
-	"ohp/internal/domain/token"
-	"ohp/internal/pkg/config"
-	"ohp/internal/pkg/log"
+	"torchi/internal/domain/endpoint"
+	"torchi/internal/domain/notifications"
+	"torchi/internal/domain/token"
+	"torchi/internal/pkg/config"
+	"torchi/internal/pkg/log"
 
 	"github.com/SherClockHolmes/webpush-go"
 )

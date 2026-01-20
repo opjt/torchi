@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"ohp/internal/api/wrapper"
-	"ohp/internal/domain/push"
-	"ohp/internal/pkg/config"
-	"ohp/internal/pkg/log"
 	"time"
+	"torchi/internal/api/wrapper"
+	"torchi/internal/domain/push"
+	"torchi/internal/pkg/config"
+	"torchi/internal/pkg/log"
 
 	"github.com/go-chi/chi/v5"
 )

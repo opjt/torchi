@@ -1,10 +1,10 @@
 package core
 
 import (
-	"ohp/internal/api"
-	"ohp/internal/domain"
-	"ohp/internal/infrastructure/db"
-	"ohp/internal/pkg"
+	"torchi/internal/api"
+	"torchi/internal/domain"
+	"torchi/internal/infrastructure/db"
+	"torchi/internal/pkg"
 
 	"go.uber.org/fx"
 )

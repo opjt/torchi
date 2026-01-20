@@ -3,9 +3,9 @@ package handler
 import (
 	"context"
 	"net/http"
-	"ohp/internal/api/wrapper"
-	"ohp/internal/domain/endpoint"
-	"ohp/internal/pkg/log"
+	"torchi/internal/api/wrapper"
+	"torchi/internal/domain/endpoint"
+	"torchi/internal/pkg/log"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"

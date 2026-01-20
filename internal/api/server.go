@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 	"net/http"
-	"ohp/internal/pkg/config"
-	"ohp/internal/pkg/log"
+	"torchi/internal/pkg/config"
+	"torchi/internal/pkg/log"
 
 	"strconv"
 

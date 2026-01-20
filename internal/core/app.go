@@ -3,10 +3,10 @@ package core
 import (
 	"context"
 	"log/slog"
-	"ohp/internal/pkg/config"
-	"ohp/internal/pkg/log"
 	"os"
 	"time"
+	"torchi/internal/pkg/config"
+	"torchi/internal/pkg/log"
 
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"

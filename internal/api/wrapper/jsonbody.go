@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"ohp/internal/domain/common"
+	"torchi/internal/domain/common"
 )
 
 type ErrorDetail struct {
