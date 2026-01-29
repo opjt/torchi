@@ -109,7 +109,7 @@ func (s *PushService) Push(ctx context.Context, endpointToken string, message st
 		NotificationEnable: endpoint.NotificationEnable,
 	})
 
-	if endpoint.NotificationEnable == false {
+	if !endpoint.NotificationEnable {
 		return 0, err
 	}
 

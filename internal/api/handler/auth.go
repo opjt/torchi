@@ -138,7 +138,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	if r.Body != http.NoBody {
 		if err := json.NewDecoder(r.Body).Decode(&reqBody); err == nil && reqBody.Endpoint != "" {
 			h.log.Info("deactive token", "endpoint", reqBody.Endpoint)
-			h.tokenService.DeactiveToken(r.Context(), reqBody.Endpoint)
+			h.tokenService.DeactiveToken(r.Context(), reqBody.Endpoint) // TODO: 에러처리
 
 		}
 	}

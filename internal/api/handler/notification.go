@@ -52,7 +52,10 @@ func (h *NotiHandler) Delete(ctx context.Context, _ interface{}) (interface{}, e
 		return nil, err
 	}
 
-	err = h.service.MarkDelete(ctx, userClaim.UserID, parsed)
+	if err := h.service.MarkDelete(ctx, userClaim.UserID, parsed); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 
 }

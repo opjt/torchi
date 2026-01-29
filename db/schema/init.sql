@@ -18,7 +18,7 @@ CREATE TABLE
         endpoint TEXT NOT NULL,
         is_active BOOLEAN NOT NULL DEFAULT true,
         created_at TIMESTAMP NOT NULL DEFAULT now(),
-        UNIQUE (user_id, p256dh_key, auth_key, endpoint)
+        UNIQUE ( p256dh_key, auth_key, endpoint)
     );
 
 -- endpoints

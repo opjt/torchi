@@ -15,12 +15,17 @@ type SubscriptionHandler struct {
 	service *push.PushService
 }
 
-func NewSubscriptionHandler(log *log.Logger, service *push.PushService) *SubscriptionHandler {
+func NewSubscriptionHandler(
+	log *log.Logger,
+	service *push.PushService,
+) *SubscriptionHandler {
 	return &SubscriptionHandler{
 		log:     log,
 		service: service,
 	}
 }
+
+// /subscriptions
 func (h *SubscriptionHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/", wrapper.WrapJson(h.Subscribe, h.log.Error, wrapper.RespondJSON))
@@ -80,5 +85,5 @@ func (h *SubscriptionHandler) Unsubscribe(ctx context.Context, req reqSubscribe)
 
 	h.log.Info("push subscribe", "endpoint", req.Endpoint)
 
-	return "success1", nil
+	return "success", nil
 }

@@ -101,9 +101,10 @@ INSERT INTO push_tokens (
     endpoint
 )
 VALUES ($1, $2, $3, $4)
-ON CONFLICT (user_id, p256dh_key, auth_key, endpoint)
+ON CONFLICT (p256dh_key, auth_key, endpoint)
 DO UPDATE SET
-    is_active = true
+    is_active = true,
+    user_id = EXCLUDED.user_id
 RETURNING user_id
 `
 
