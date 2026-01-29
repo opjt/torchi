@@ -12,6 +12,7 @@ type TokenRepository interface {
 	RemoveToken(ctx context.Context, token Token) error
 	FindByUserID(ctx context.Context, userID uuid.UUID) ([]Token, error)
 	FindByEndpoint(ctx context.Context, endpoint string) (*Token, error)
+	DeactivateToken(ctx context.Context, endpoint string) error
 }
 
 type tokenRepository struct {
@@ -77,4 +78,8 @@ func (r *tokenRepository) RemoveToken(ctx context.Context, token Token) error {
 		AuthKey:   token.Auth,
 	}
 	return r.queries.DeleteToken(ctx, param)
+}
+
+func (r *tokenRepository) DeactivateToken(ctx context.Context, endpoint string) error {
+	return r.queries.DeactivatePushToken(ctx, endpoint)
 }

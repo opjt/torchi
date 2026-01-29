@@ -11,6 +11,17 @@ import (
 	"github.com/google/uuid"
 )
 
+const deactivatePushToken = `-- name: DeactivatePushToken :exec
+UPDATE push_tokens
+SET is_active = false
+WHERE endpoint = $1
+`
+
+func (q *Queries) DeactivatePushToken(ctx context.Context, endpoint string) error {
+	_, err := q.db.Exec(ctx, deactivatePushToken, endpoint)
+	return err
+}
+
 const deleteToken = `-- name: DeleteToken :exec
 DELETE FROM push_tokens
 WHERE endpoint = $1 
@@ -51,7 +62,7 @@ func (q *Queries) FindTokenByEndpoint(ctx context.Context, endpoint string) (Pus
 
 const findTokenByUserID = `-- name: FindTokenByUserID :many
 SELECT id, user_id, p256dh_key, auth_key, endpoint, is_active, created_at FROM push_tokens
-WHERE user_id = $1
+WHERE user_id = $1 AND is_active = true
 `
 
 func (q *Queries) FindTokenByUserID(ctx context.Context, userID uuid.UUID) ([]PushToken, error) {

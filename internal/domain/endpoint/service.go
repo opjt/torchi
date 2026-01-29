@@ -34,6 +34,7 @@ func (s *EndpointService) List(ctx context.Context) ([]Endpoint, error) {
 }
 
 func (s *EndpointService) UpdateMute(ctx context.Context, token string, notiEnable bool) error {
+	//TODO: 업데이트할 엔드포인트가 없으면 예외처리.
 	if notiEnable {
 		return s.repo.UpdateUnmute(ctx, token)
 	} else {

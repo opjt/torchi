@@ -35,3 +35,7 @@ func (s *TokenService) FindByUserID(ctx context.Context, userID uuid.UUID) ([]To
 func (s *TokenService) FindByEndpoint(ctx context.Context, endpoint string) (*Token, error) {
 	return s.repo.FindByEndpoint(ctx, endpoint)
 }
+
+func (s *TokenService) DeactiveToken(ctx context.Context, endpoint string) error {
+	return s.repo.DeactivateToken(ctx, endpoint)
+}

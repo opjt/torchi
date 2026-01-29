@@ -19,8 +19,13 @@ WHERE endpoint = $1
 
 -- name: FindTokenByUserID :many
 SELECT * FROM push_tokens
-WHERE user_id = $1;
+WHERE user_id = $1 AND is_active = true;
 
 -- name: FindTokenByEndpoint :one
 SELECT * FROM push_tokens
+WHERE endpoint = $1;
+
+-- name: DeactivatePushToken :exec
+UPDATE push_tokens
+SET is_active = false
 WHERE endpoint = $1;

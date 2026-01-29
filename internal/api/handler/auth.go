@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"torchi/internal/api/wrapper"
 	"torchi/internal/domain/auth"
+	"torchi/internal/domain/token"
 	"torchi/internal/pkg/config"
 	"torchi/internal/pkg/log"
 
@@ -11,10 +13,11 @@ import (
 )
 
 type AuthHandler struct {
-	log      *log.Logger
-	frontUrl string
-	service  *auth.AuthService
-	env      config.Env
+	log          *log.Logger
+	frontUrl     string
+	service      *auth.AuthService
+	tokenService *token.TokenService
+	env          config.Env
 }
 
 const (
@@ -22,19 +25,25 @@ const (
 	RefreshCookieKey = "refresh_token"
 )
 
-func NewAuthHandler(log *log.Logger, env config.Env, service *auth.AuthService) *AuthHandler {
+func NewAuthHandler(
+	log *log.Logger,
+	env config.Env,
+	service *auth.AuthService,
+	tokenService *token.TokenService,
+) *AuthHandler {
 
 	return &AuthHandler{
-		log:      log,
-		frontUrl: env.FrontUrl,
-		service:  service,
-		env:      env,
+		log:          log,
+		frontUrl:     env.FrontUrl,
+		env:          env,
+		service:      service,
+		tokenService: tokenService,
 	}
 }
 func (h *AuthHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/github/callback", h.OauthGithubCallback)
-	r.Get("/logout", h.Logout)
+	r.Post("/logout", h.Logout)
 	r.Post("/refresh", h.Refresh)
 
 	if h.env.Stage == config.StageDev {
@@ -103,6 +112,10 @@ func (h *AuthHandler) FakeLogin(w http.ResponseWriter, r *http.Request) {
 	wrapper.RespondJSON(w, http.StatusOK, nil)
 }
 
+type LogoutRequest struct {
+	Endpoint string `json:"endpoint"`
+}
+
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	keys := []string{AccessCookieKey, RefreshCookieKey}
 	for _, key := range keys {
@@ -117,6 +130,17 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: true,
 			MaxAge:   -1,
 		})
+	}
+
+	var reqBody LogoutRequest
+
+	// Body가 있을 경우 읽기 (에러가 나도 로그아웃은 진행되도록 처리)
+	if r.Body != http.NoBody {
+		if err := json.NewDecoder(r.Body).Decode(&reqBody); err == nil && reqBody.Endpoint != "" {
+			h.log.Info("deactive token", "endpoint", reqBody.Endpoint)
+			h.tokenService.DeactiveToken(r.Context(), reqBody.Endpoint)
+
+		}
 	}
 	wrapper.RespondJSON(w, http.StatusOK, nil)
 }

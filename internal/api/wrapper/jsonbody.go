@@ -8,7 +8,7 @@ import (
 )
 
 type ErrorDetail struct {
-	//TODO: common.DomainError로 대체할지 고민..
+	// common.DomainError로 대체할지 고민..
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
