@@ -11,8 +11,10 @@ RUN go mod download
 COPY . .
 
 # static binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -o torchi
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w" -o torchi
 
 # 2. runtime stage
 FROM gcr.io/distroless/base-debian12
