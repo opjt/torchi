@@ -5,7 +5,8 @@ WORKDIR /app
 
 # 의존성 캐시
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 # 소스 복사
 COPY . .
@@ -17,7 +18,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go build -ldflags="-s -w" -o torchi
 
 # 2. runtime stage
-FROM gcr.io/distroless/base-debian12
+FROM gcr.io/distroless/static-debian12
 
 WORKDIR /app
 COPY --from=builder /app/torchi .
