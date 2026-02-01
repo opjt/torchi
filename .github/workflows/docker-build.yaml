@@ -1,0 +1,29 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches: [ "main" ] # 메인에 푸시될 때만 작동
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 도커 허브 로그인
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 이미지 빌드 및 푸시 
+      - name: Build and Push API
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/torchi-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/torchi-api:${{ github.sha }}
