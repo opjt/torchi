@@ -47,7 +47,7 @@ jobs:
       # Kustomize로 이미지 태그 수정
       - name: Update K8s Manifest
         run: |
-          cd k8s-ssot/base 
+          cd k8s-ssot/base/api 
           kustomize edit set image opjt/torchi-api=opjt/torchi-api:${{ env.IMAGE_TAG }}
           
           # Git에 반영
