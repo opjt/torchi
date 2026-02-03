@@ -3,6 +3,8 @@ name: Docker Build and Push
 on:
   push:
     branches: [ "main" ] # 메인에 푸시될 때만 작동
+    paths:
+      - 'dockerfile'
 
 jobs:
   build-and-push:
