@@ -3,6 +3,8 @@ name: Docker Build and Push
 on:
   push:
     branches: ['main']
+    paths:
+      - 'package.json'
   workflow_dispatch:
 
 jobs:
