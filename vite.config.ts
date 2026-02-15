@@ -12,7 +12,16 @@ const pkg = JSON.parse(json);
 
 export default defineConfig({
 	resolve: { alias: { $lib: path.resolve('./src/lib'), $src: path.resolve('./src') } },
-
+	server: {
+		proxy: {
+			'/api': {
+				target: 'http://localhost:25565',
+				changeOrigin: true,
+				secure: false,
+				rewrite: (path) => path.replace(/^\/api/, ''),
+			},
+		},
+	},
 	plugins: [
 		tailwindcss(),
 		sveltekit(),

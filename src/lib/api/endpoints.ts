@@ -1,4 +1,3 @@
-import { PUBLIC_API_URL } from '$lib/config';
 import { api, catchError, type Result } from '$lib/pkg/fetch';
 export interface Endpoint {
 	id: string;
@@ -8,19 +7,19 @@ export interface Endpoint {
 }
 
 export async function fetchEndpoints(): Promise<Endpoint[]> {
-	const res = await api<Endpoint[]>(`${PUBLIC_API_URL}/endpoints`);
+	const res = await api<Endpoint[]>('/endpoints');
 	return res;
 }
 
 export async function deleteEndpoint(token: string): Promise<void> {
-	await api<void>(`${PUBLIC_API_URL}/endpoints/${token}`, {
+	await api<void>(`/endpoints/${token}`, {
 		method: 'DELETE',
 	});
 }
 
 export async function muteEndpoint(token: string): Promise<Result<void>> {
 	return await catchError(
-		api<void>(`${PUBLIC_API_URL}/endpoints/${token}/mute`, {
+		api<void>(`/endpoints/${token}/mute`, {
 			method: 'POST',
 		}),
 	);
@@ -28,7 +27,7 @@ export async function muteEndpoint(token: string): Promise<Result<void>> {
 
 export async function unmuteEndpoint(token: string): Promise<Result<void>> {
 	return catchError(
-		api<void>(`${PUBLIC_API_URL}/endpoints/${token}/mute`, {
+		api<void>(`/endpoints/${token}/mute`, {
 			method: 'DELETE',
 		}),
 	);

@@ -1,4 +1,3 @@
-import { PUBLIC_API_URL } from '$lib/config';
 import { api } from '$lib/pkg/fetch';
 
 // 백엔드 응답 구조와 일치
@@ -49,16 +48,16 @@ export function transformNotification(apiData: NotificationApiResponse): Display
 		isRead: apiData.is_read,
 		timestamp: formatTimestamp(apiData.created_at),
 		createdAt: apiData.created_at,
-		isMute: apiData.mute
+		isMute: apiData.mute,
 	};
 }
 
 // 실제 API 호출 (Cursor 지원)
 export async function getNotifications(
 	cursor?: string,
-	endpointID?: string
+	endpointID?: string,
 ): Promise<PaginatedNotiResponse> {
-	const url = new URL(`${PUBLIC_API_URL}/notifications`);
+	const url = new URL(`/notifications`);
 	if (cursor) url.searchParams.append('cursor', cursor);
 	if (endpointID && endpointID !== 'ALL') url.searchParams.append('endpoint_id', endpointID);
 
@@ -70,15 +69,15 @@ export async function getNotifications(
 // 알림 읽음 처리
 export async function markAsReadUntil(lastId: string, endpointID?: string): Promise<void> {
 	const actualEndpointID = endpointID && endpointID !== 'ALL' ? endpointID : undefined;
-	await api(`${PUBLIC_API_URL}/notifications/read-until`, {
+	await api(`/notifications/read-until`, {
 		method: 'POST',
-		body: { last_id: lastId, endpoint_id: actualEndpointID }
+		body: { last_id: lastId, endpoint_id: actualEndpointID },
 	});
 }
 
 // 알림 삭제 처리
 export async function deleteNotification(id: string): Promise<void> {
-	await api(`${PUBLIC_API_URL}/notifications/${id}`, {
-		method: 'DELETE'
+	await api(`/notifications/${id}`, {
+		method: 'DELETE',
 	});
 }

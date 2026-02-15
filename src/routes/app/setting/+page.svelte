@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { PUBLIC_API_URL } from '$lib/config';
+	import { page } from '$app/stores';
 	import {
 		fetchEndpoints,
 		deleteEndpoint,
@@ -44,7 +44,7 @@
 		if (!newServiceName.trim()) return;
 
 		try {
-			await api<void>(`${PUBLIC_API_URL}/endpoints`, {
+			await api<void>(`/endpoints`, {
 				method: 'POST',
 				body: {
 					serviceName: newServiceName.trim(),
@@ -88,7 +88,7 @@
 	}
 
 	async function copyEndpoint(token: string, id: string) {
-		const url = `${PUBLIC_API_URL}/api/push/${token}`;
+		const url = `${$page.url.origin}/api/push/${token}`;
 		const curlCmd = `curl "${url}" -d 'msg=Hello!'`;
 
 		await navigator.clipboard.writeText(curlCmd);
@@ -327,7 +327,7 @@
 							<input
 								type="text"
 								readonly
-								value="{PUBLIC_API_URL}/api/push/{endpoint.token}"
+								value="{$page.url.origin}/api/v1/push/{endpoint.token}"
 								class="rounded-xl border-base-content/5 bg-base-100 py-2.5 pr-10 pl-3 font-mono w-full truncate border text-[10px] opacity-70 transition-opacity focus:opacity-100 focus:outline-none"
 							/>
 							<button

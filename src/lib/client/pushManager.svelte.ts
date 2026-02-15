@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { subscribe } from '$lib/api/push';
-import { PUBLIC_API_URL, PUBLIC_VAPID_KEY } from '$lib/config';
+import { PUBLIC_VAPID_KEY } from '$lib/config';
 import { api, catchError } from '$lib/pkg/fetch';
 import { toast } from 'svelte-sonner';
 
@@ -43,7 +43,6 @@ class PushNotificationManager {
 	permissionState = $state<NotificationPermission | null>(null);
 
 	private VAPID_PUBLIC_KEY = PUBLIC_VAPID_KEY;
-	private SERVER_URL = PUBLIC_API_URL;
 
 	private notifyError(localError: (typeof PushError)[keyof typeof PushError], e?: unknown) {
 		// 1. 상세 메시지(description) 추출 로직
@@ -216,7 +215,7 @@ class PushNotificationManager {
 		try {
 			await catchError(
 				// 실패해도 조용히 넘어갑니다.
-				api<void>(`${this.SERVER_URL}/subscriptions/unsubscribe`, {
+				api<void>(`/subscriptions/unsubscribe`, {
 					method: 'POST',
 					body: subToUnsubscribe.toJSON(),
 					toastType: 'none',
@@ -262,7 +261,7 @@ class PushNotificationManager {
 		}
 
 		await catchError(
-			api<void>(`${this.SERVER_URL}/api/push-test`, {
+			api<void>(`/api/push-test`, {
 				method: 'POST',
 				body: this.subscription.toJSON(),
 			}),
@@ -303,7 +302,7 @@ class PushNotificationManager {
 			// 데모 전용 엔드포인트 호출
 			const subJson = tempSub.toJSON();
 
-			await api<void>(`${this.SERVER_URL}/api/push-demo`, {
+			await api<void>(`/api/push-demo`, {
 				method: 'POST',
 				body: {
 					endpoint: subJson.endpoint,

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { loginWithGithub } from '$lib/client/auth/github-auth';
-	import { PUBLIC_API_URL } from '$lib/config';
-	import { Bell, Flame, LoaderCircle, Play, Share, SquarePlus, X } from 'lucide-svelte';
+	import { page } from '$app/stores';
+	import { Bell, LoaderCircle, Play, Share, SquarePlus, X } from 'lucide-svelte';
 	// 아이콘 추가
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
@@ -53,8 +53,10 @@
 		const tomorrow = Date.now() + ONE_DAY;
 		localStorage.setItem(INSTALL_POPUP_HIDE_KEY, String(tomorrow));
 	}
+	let origin = 'httptest'; // 기본값 (서버 에러 방지용)
 
 	onMount(async () => {
+		origin = window.location.origin;
 		// 1. 현재 앱이 설치된 상태(Standalone)인지 확인
 		const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
@@ -142,7 +144,7 @@
 					class="rounded-2xl bg-neutral p-4 pt-8 pb-6 font-mono text-neutral-content/90 shadow-2xl border-white/5 relative overflow-hidden border text-[13px]"
 				>
 					<span class="">curl</span>
-					<span class=""> "{PUBLIC_API_URL}/api/demo" \ </span>
+					<span class=""> "{$page.url.origin}/api/v1/demo" \ </span>
 					<div>&nbsp;-d <span class="text-success/90">'{demoMessage}'</span></div>
 
 					<button

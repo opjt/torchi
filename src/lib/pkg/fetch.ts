@@ -1,5 +1,4 @@
 import { logout } from '$lib/client/auth/lifecycle';
-import { PUBLIC_API_URL } from '$lib/config';
 import { getErrorMessage } from './error-message';
 import { shouldShowToast, showToast, type ToastType } from './toast';
 
@@ -68,7 +67,7 @@ export async function api<TResponse, TBody = unknown>(
 		signal,
 		toastType = 'error', // 토스트를 직접 컨트롤 하려면 'none' 으로 사용
 	} = options;
-
+	url = `/api${url}`;
 	// 에러를 던지기 전에 토스트를 처리하는 내부 헬퍼
 	const handleError = (status: number, message?: string, code?: string) => {
 		showToastWrapper(toastType, getErrorMessage(code, message), code);
@@ -100,7 +99,7 @@ export async function api<TResponse, TBody = unknown>(
 
 				(async () => {
 					try {
-						const refreshRes = await fetch(`${PUBLIC_API_URL}/auth/refresh`, {
+						const refreshRes = await fetch(`/api/auth/refresh`, {
 							method: 'POST',
 							credentials: 'include',
 						});
