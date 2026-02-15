@@ -16,6 +16,9 @@
 	import { Bell, BellOff, ChevronLeft, Copy, Plus, Trash2, User } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
+	import * as Dialog from '$lib/components/ui/dialog/index';
+	import { withdraw } from '$lib/api/user';
+	import { showToast } from '$lib/pkg/toast';
 
 	let endpoints = $state<Endpoint[]>([]);
 
@@ -116,6 +119,23 @@
 
 	async function testPush() {
 		await push.testNotification();
+	}
+	let isDeleteModalOpen = $state(false); // 탈퇴 모달 트리거
+	let deleteConfirmText = $state(''); // confirm용 input bind
+	let isDeleting = $state(false);
+	const DELETE_CONFIRM_PHRASE = '탈퇴합니다';
+
+	async function deleteAccount() {
+		if (deleteConfirmText !== DELETE_CONFIRM_PHRASE) return;
+		isDeleting = true;
+		let result = await withdraw();
+		isDeleting = false;
+		isDeleteModalOpen = false;
+
+		if (result.ok) {
+			await logout();
+			showToast.message('계정이 안전하게 정리됐어요.');
+		}
 	}
 </script>
 
@@ -353,14 +373,63 @@
 			>
 				로그아웃
 			</button>
+
 			<div class="space-y-2 text-center">
 				<div class="gap-4 text-xs flex justify-center opacity-40">
-					<a href="/terms" target="" class="hover:opacity-70">이용약관</a>
+					<a href="/terms" class="hover:opacity-70">이용약관</a>
 					<span>·</span>
-					<a href="/privacy" target="" class="hover:opacity-70">개인정보처리방침</a>
+					<a href="/privacy" class="hover:opacity-70">개인정보처리방침</a>
+					<span>·</span>
+					<button
+						onclick={() => {
+							isDeleteModalOpen = true;
+							deleteConfirmText = '';
+						}}
+						class="hover:text-error underline underline-offset-2 transition-colors hover:opacity-70"
+					>
+						회원탈퇴
+					</button>
 				</div>
 				<p class="font-mono text-[10px] opacity-30">v{__APP_VERSION__}</p>
 			</div>
 		</section>
+		<!-- 회원탈퇴 모달 -->
+		<Dialog.Root bind:open={isDeleteModalOpen}>
+			<Dialog.Content class="rounded-3xl max-w-sm mx-4 border-0">
+				<Dialog.Header>
+					<Dialog.Title class="text-lg font-black">정말 탈퇴하시겠어요?</Dialog.Title>
+					<Dialog.Description class="text-sm opacity-50">
+						모든 엔드포인트와 데이터가 삭제되며 복구할 수 없어요.
+					</Dialog.Description>
+				</Dialog.Header>
+
+				<div class="mt-2 space-y-2">
+					<p class="text-xs font-bold">
+						확인을 위해 아래에 <span class="text-error">'{DELETE_CONFIRM_PHRASE}'</span> 를 입력해주세요
+					</p>
+					<input
+						type="text"
+						bind:value={deleteConfirmText}
+						placeholder={DELETE_CONFIRM_PHRASE}
+						class="input input-bordered rounded-xl border-base-300 w-full focus:outline-none"
+					/>
+				</div>
+
+				<Dialog.Footer class="gap-2 mt-4 flex-row">
+					<Dialog.Close class="btn  rounded-xl flex-1" disabled={isDeleting}>취소</Dialog.Close>
+					<button
+						onclick={deleteAccount}
+						disabled={deleteConfirmText !== DELETE_CONFIRM_PHRASE || isDeleting}
+						class="btn btn-error rounded-xl flex-1"
+					>
+						{#if isDeleting}
+							<span class="loading loading-spinner loading-xs"></span>
+						{:else}
+							탈퇴하기
+						{/if}
+					</button>
+				</Dialog.Footer>
+			</Dialog.Content>
+		</Dialog.Root>
 	</main>
 </div>

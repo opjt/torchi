@@ -1,4 +1,4 @@
-import { api } from '$lib/pkg/fetch';
+import { api, catchError, type Result } from '$lib/pkg/fetch';
 export interface UserInfo {
 	user_id: string;
 	email?: string;
@@ -14,4 +14,12 @@ export async function agreeToTerms(): Promise<void> {
 	await api<void>(`/users/terms-agree`, {
 		method: 'POST',
 	});
+}
+
+export async function withdraw(): Promise<Result<void>> {
+	return catchError(
+		api<void>(`/users`, {
+			method: 'DELETE',
+		}),
+	);
 }
