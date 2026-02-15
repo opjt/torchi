@@ -16,3 +16,7 @@ WHERE id = $1;
 UPDATE users
 SET terms_agreed = true
 WHERE id = $1;
+
+-- name: DeleteUser :exec
+DELETE FROM users
+WHERE id = $1;

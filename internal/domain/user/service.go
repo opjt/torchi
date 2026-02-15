@@ -15,6 +15,10 @@ func NewUserService(repo UserRepository) *UserService {
 		repo: repo,
 	}
 }
+func (s *UserService) Withdraw(ctx context.Context, userID uuid.UUID) error {
+
+	return s.repo.DeleteByID(ctx, userID)
+}
 func (s *UserService) TermsAgree(ctx context.Context, userID uuid.UUID) error {
 	return s.repo.TermsAgree(ctx, userID)
 }

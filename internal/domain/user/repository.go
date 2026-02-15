@@ -14,12 +14,18 @@ type UserRepository interface {
 	UpsertUserByEmail(context.Context, string) (*User, error)
 	FindByID(context.Context, uuid.UUID) (*User, error)
 	TermsAgree(context.Context, uuid.UUID) error
+	DeleteByID(context.Context, uuid.UUID) error
 }
 
 func NewUserRepository(queries *db.Queries) UserRepository {
 	return &userRepository{
 		queries: queries,
 	}
+}
+func (r *userRepository) DeleteByID(ctx context.Context, userID uuid.UUID) error {
+	//cascade 로 관련 테이블 데이터 같이 제거됨.
+	// Endpoints, Push_tokens, Notifications
+	return r.queries.DeleteUser(ctx, userID)
 }
 func (r *userRepository) TermsAgree(ctx context.Context, userID uuid.UUID) error {
 

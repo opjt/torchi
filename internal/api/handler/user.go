@@ -30,8 +30,23 @@ func (h *UserHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/whoami", h.Whoami)
 	r.Post("/terms-agree", wrapper.WrapJson(h.TermsAgree, h.log.Error, wrapper.RespondJSON))
-
+	r.Delete("/", wrapper.WrapJson(h.Withdraw, h.log.Error, wrapper.RespondJSON))
 	return r
+}
+
+// Withdraw User 회원탈퇴
+func (h *UserHandler) Withdraw(ctx context.Context, _ interface{}) (interface{}, error) {
+
+	userClaim, err := token.UserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = h.service.Withdraw(ctx, userClaim.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
 }
 func (h *UserHandler) TermsAgree(ctx context.Context, _ interface{}) (interface{}, error) {
 
