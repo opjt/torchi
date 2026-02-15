@@ -8,3 +8,16 @@ export function debugLog(...args: any[]) {
 export function isDev() {
 	return import.meta.env.DEV;
 }
+
+export function linkify(text: string): string {
+	const urlRegex = /(https?:\/\/[^\s]+)/g;
+	return text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(
+			urlRegex,
+			(url) =>
+				`<a href="${url}" target="_blank" rel="noopener noreferrer" class=" underline underline-offset-2 break-all hover:opacity-70 transition-opacity">${url}</a>`,
+		);
+}

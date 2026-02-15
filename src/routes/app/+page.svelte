@@ -8,7 +8,7 @@
 		transformNotification,
 		type DisplayNotification,
 	} from '$lib/api/notifications';
-	import { debugLog } from '$lib/pkg/util';
+	import { debugLog, linkify } from '$lib/pkg/util';
 	import { auth } from '$lib/client/auth/auth';
 	import { BellOff, ChevronDown, Settings, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
@@ -299,7 +299,7 @@
 								? 'border-base-content/5 text-base-content/60'
 								: 'border-primary/30 text-base-content/95'}"
 						>
-							{noti.body}
+							{@html linkify(noti.body)}
 						</p>
 
 						<!-- {#if noti.actions && noti.actions.length > 0}

@@ -57,13 +57,12 @@ export async function getNotifications(
 	cursor?: string,
 	endpointID?: string,
 ): Promise<PaginatedNotiResponse> {
-	const url = new URL(`/notifications`);
-	if (cursor) url.searchParams.append('cursor', cursor);
-	if (endpointID && endpointID !== 'ALL') url.searchParams.append('endpoint_id', endpointID);
+	let path = `/notifications?limit=20`;
 
-	url.searchParams.append('limit', '20');
+	if (cursor) path += `&cursor=${encodeURIComponent(cursor)}`;
+	if (endpointID && endpointID !== 'ALL') path += `&endpoint_id=${encodeURIComponent(endpointID)}`;
 
-	return await api<PaginatedNotiResponse>(url.toString());
+	return await api<PaginatedNotiResponse>(path);
 }
 
 // 알림 읽음 처리
