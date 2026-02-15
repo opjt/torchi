@@ -30,8 +30,8 @@ func NewRouter(
 	r.Use(middleware.Recoverer)
 	r.Use(middle.CorsMiddleware(env.FrontUrl))
 
-	r.With(middle.RateLimitMiddleware(limitMiddleware)).Mount("/api", apiHandler.Routes())
-	// r.Mount("/api", apiHandler.Routes())
+	r.With(middle.RateLimitMiddleware(limitMiddleware)).Mount("/v1", apiHandler.Routes())
+
 	r.Mount("/auth", authHandler.Routes())
 
 	r.Group(func(r chi.Router) {
