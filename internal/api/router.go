@@ -30,16 +30,18 @@ func NewRouter(
 	r.Use(middleware.Recoverer)
 	r.Use(middle.CorsMiddleware(env.FrontUrl))
 
-	r.With(middle.RateLimitMiddleware(limitMiddleware)).Mount("/v1", apiHandler.Routes())
+	r.Route("/api", func(r chi.Router) {
+		r.With(middle.RateLimitMiddleware(limitMiddleware)).Mount("/v1", apiHandler.Routes())
 
-	r.Mount("/auth", authHandler.Routes())
+		r.Mount("/auth", authHandler.Routes())
 
-	r.Group(func(r chi.Router) {
-		r.Use(middle.AuthMiddleware(tokenProvider))
-		r.Mount("/subscriptions", subscriptionHandler.Routes())
-		r.Mount("/users", userHandler.Routes())
-		r.Mount("/endpoints", endpointHandler.Routes())
-		r.Mount("/notifications", notiHandler.Routes())
+		r.Group(func(r chi.Router) {
+			r.Use(middle.AuthMiddleware(tokenProvider))
+			r.Mount("/subscriptions", subscriptionHandler.Routes())
+			r.Mount("/users", userHandler.Routes())
+			r.Mount("/endpoints", endpointHandler.Routes())
+			r.Mount("/notifications", notiHandler.Routes())
+		})
 	})
 
 	return r
