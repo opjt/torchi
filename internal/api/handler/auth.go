@@ -117,32 +117,41 @@ type LogoutRequest struct {
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	keys := []string{AccessCookieKey, RefreshCookieKey}
-	for _, key := range keys {
-		cookiePath := "/"
-		if key == RefreshCookieKey {
-			cookiePath = "/auth/refresh"
-		}
+	h.clearAuthCookies(w)
+	h.tryDeactivateToken(r)
+	wrapper.RespondJSON(w, http.StatusOK, nil)
+}
+
+func (h *AuthHandler) clearAuthCookies(w http.ResponseWriter) {
+	cookies := map[string]string{
+		AccessCookieKey:  "/",
+		RefreshCookieKey: "/auth/refresh",
+	}
+	for key, path := range cookies {
 		http.SetCookie(w, &http.Cookie{
 			Name:     key,
 			Value:    "",
-			Path:     cookiePath,
+			Path:     path,
 			HttpOnly: true,
 			MaxAge:   -1,
 		})
 	}
+}
+
+func (h *AuthHandler) tryDeactivateToken(r *http.Request) {
+	if r.Body == http.NoBody {
+		return
+	}
 
 	var reqBody LogoutRequest
-
-	// Body가 있을 경우 읽기 (에러가 나도 로그아웃은 진행되도록 처리)
-	if r.Body != http.NoBody {
-		if err := json.NewDecoder(r.Body).Decode(&reqBody); err == nil && reqBody.Endpoint != "" {
-			h.log.Info("deactive token", "endpoint", reqBody.Endpoint)
-			h.tokenService.DeactiveToken(r.Context(), reqBody.Endpoint) // TODO: 에러처리
-
-		}
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil || reqBody.Endpoint == "" {
+		return
 	}
-	wrapper.RespondJSON(w, http.StatusOK, nil)
+
+	h.log.Info("deactive token", "endpoint", reqBody.Endpoint)
+	if err := h.tokenService.DeactiveToken(r.Context(), reqBody.Endpoint); err != nil {
+		h.log.Error("failed to deactive token", "error", err)
+	}
 }
 func (h *AuthHandler) OauthGithubCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
