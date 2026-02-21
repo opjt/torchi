@@ -261,7 +261,7 @@ class PushNotificationManager {
 		}
 
 		await catchError(
-			api<void>(`/api/push-test`, {
+			api<void>(`/push-test`, {
 				method: 'POST',
 				body: this.subscription.toJSON(),
 			}),

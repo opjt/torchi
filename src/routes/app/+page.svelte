@@ -8,10 +8,11 @@
 		transformNotification,
 		type DisplayNotification,
 	} from '$lib/api/notifications';
-	import { debugLog, linkify } from '$lib/pkg/util';
 	import { auth } from '$lib/client/auth/auth';
-	import { BellOff, ChevronDown, Settings, X } from 'lucide-svelte';
-	import { onMount } from 'svelte';
+	import { debugLog, linkify } from '$lib/pkg/util';
+	import { ArrowLeft, BellOff, ChevronDown, Search, Settings, X } from 'lucide-svelte';
+	import { onMount, tick } from 'svelte';
+	import { cubicOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
 
 	// --- 상태 관리 ---
@@ -22,14 +23,17 @@
 	let isFilterOpen = $state(false);
 	let selectedServiceId = $state<string | 'ALL'>('ALL');
 
+	// --- 검색 상태 ---
+	let searchInputValue = $state(''); // input에 바인딩되는 값 (타이핑 중인 값)
+	let searchQuery = $state(''); // 실제 API 검색에 사용되는 확정 값
+	let isSearchMode = $state(false);
+	let searchInputEl = $state<HTMLInputElement | null>(null);
+
 	// 관찰할 하단 요소
 	let observerTarget = $state<HTMLElement | null>(null);
 
-	// 엔드포인트 이름 목록 저장
+	// 엔드포인트 목록
 	let endpoints = $state<Endpoint[]>([]);
-
-	// 필터링된 리스트
-	let filteredList = $derived(notifications);
 
 	// 💡 선택된 서비스의 "이름"을 찾기 위한 derived
 	let currentFilterName = $derived.by(() => {
@@ -42,11 +46,9 @@
 			endpoints = await fetchEndpoints();
 		} catch (e) {
 			console.error('Failed to fetch endpoints:', e);
-		} finally {
 		}
 	}
 
-	// 데이터 로딩 함수
 	async function loadNotifications(isFirst = false) {
 		if (loading || (!isFirst && !hasMore)) {
 			debugLog('Skip loading', { loading, hasMore, isFirst });
@@ -54,22 +56,27 @@
 		}
 
 		loading = true;
-		debugLog('Start loading', { isFirst, nextCursor });
+		debugLog('Start loading', { isFirst, nextCursor, searchQuery });
 		try {
 			const res = await getNotifications(
 				isFirst ? undefined : (nextCursor ?? undefined),
 				selectedServiceId,
+				searchQuery.trim() || undefined,
 			);
 			const newItems = res.items.map(transformNotification);
 
 			if (isFirst) {
 				notifications = newItems;
+				await tick();
+
+				window.scrollTo({ top: 0, behavior: 'instant' });
 			} else {
 				notifications = [...notifications, ...newItems];
 			}
 
 			nextCursor = res.next_cursor;
 			hasMore = res.has_more;
+
 			if (newItems.length > 0) {
 				const lastIdOfBatch = newItems[newItems.length - 1].id;
 				await markAsReadUntil(lastIdOfBatch, selectedServiceId);
@@ -82,40 +89,25 @@
 		}
 	}
 
+	// 무한스크롤 IntersectionObserver
 	$effect(() => {
 		if (!observerTarget) {
 			debugLog('Target element not found yet');
 			return;
 		}
 
-		debugLog('Setting up IntersectionObserver');
 		const observer = new IntersectionObserver(
 			(entries) => {
 				const entry = entries[0];
-				debugLog('Observer Triggered', {
-					isIntersecting: entry.isIntersecting, // 관찰영역에 있는지
-					hasMore,
-					loading,
-				});
-
 				if (entry.isIntersecting && hasMore && !loading) {
-					debugLog('Condition met! Loading more...');
 					loadNotifications();
 				}
 			},
-			{
-				threshold: 0.1,
-				rootMargin: '100px', // 사용자가 바닥에 닿기 100px 전에 미리 로딩 시작
-			},
+			{ threshold: 0.1, rootMargin: '100px' },
 		);
 
 		observer.observe(observerTarget);
-
-		// 클린업: 요소가 사라지면 자동으로 연결 해제
-		return () => {
-			debugLog('Disconnecting observer');
-			observer.disconnect();
-		};
+		return () => observer.disconnect();
 	});
 
 	onMount(async () => {
@@ -125,15 +117,15 @@
 	function toggleFilter() {
 		isFilterOpen = !isFilterOpen;
 	}
+
 	function selectFilter(id: string | 'ALL') {
 		selectedServiceId = id;
 		isFilterOpen = false;
-
-		// 필터가 바뀌면 리스트를 초기화하고 첫 페이지부터 다시 로드
 		nextCursor = null;
 		hasMore = true;
 		loadNotifications(true);
 	}
+
 	async function handleDelete(id: string) {
 		try {
 			await deleteNotification(id);
@@ -142,123 +134,250 @@
 			console.error(e);
 		}
 	}
+
+	async function enterSearchMode() {
+		isSearchMode = true;
+		notifications = []; // 목록 즉시 날림
+		hasMore = false;
+		await tick();
+		searchInputEl?.focus();
+	}
+
+	function exitSearchMode() {
+		isSearchMode = false;
+		searchInputValue = '';
+		searchQuery = '';
+		nextCursor = null;
+		hasMore = true;
+		loadNotifications(true); // 일반 목록 복구
+	}
+
+	function clearSearch() {
+		searchInputValue = '';
+		searchInputEl?.focus();
+	}
+
+	// 엔터 시 검색 실행
+	function handleSearchKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter') {
+			searchQuery = searchInputValue; // 확정값에 반영
+			nextCursor = null;
+			hasMore = true;
+			loadNotifications(true);
+		}
+	}
+
+	function highlight(html: string, query: string): string {
+		if (!query.trim()) return html;
+		const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const regex = new RegExp(escaped, 'gi');
+		const MERGE_GAP = 2; // 이 글자 수 이하 간격이면 합침
+
+		return html.replace(/(<[^>]*>)|([^<]+)/g, (_, tag, text) => {
+			if (tag) return tag;
+
+			// 1. 모든 매치 위치 수집
+			const matches: { start: number; end: number }[] = [];
+			let m: RegExpExecArray | null;
+			while ((m = regex.exec(text)) !== null) {
+				matches.push({ start: m.index, end: m.index + m[0].length });
+			}
+			if (matches.length === 0) return text;
+
+			// 2. 근접한 매치 병합
+			const merged = [matches[0]];
+			for (let i = 1; i < matches.length; i++) {
+				const prev = merged[merged.length - 1];
+				const curr = matches[i];
+				if (curr.start - prev.end <= MERGE_GAP) {
+					prev.end = curr.end; // 병합
+				} else {
+					merged.push(curr);
+				}
+			}
+
+			// 3. 병합된 구간으로 하이라이트 재구성
+			let result = '';
+			let cursor = 0;
+			for (const { start, end } of merged) {
+				result += text.slice(cursor, start);
+				result += `<mark class="bg-primary/30 text-inherit rounded-sm px-0.5">${text.slice(start, end)}</mark>`;
+				cursor = end;
+			}
+			result += text.slice(cursor);
+			return result;
+		});
+	}
+	function slideX(node: Element, { duration = 200, delay = 0, from = 1 } = {}) {
+		return {
+			duration,
+			delay,
+			css: (t: number) => {
+				const e = cubicOut(t);
+				return `
+        opacity: ${e};
+        transform: translateX(${(1 - e) * from * 24}px);
+      `;
+			},
+		};
+	}
 </script>
 
 <div class="bg-base-100 font-sans text-base-content flex min-h-screen flex-col">
 	<header
-		class="top-0 border-base-content/10 bg-base-100/90 px-5 py-5 backdrop-blur-md sticky z-30 flex items-center justify-between border-b"
+		class="top-0 border-base-content/10 bg-base-100/90 backdrop-blur-md sticky z-30 overflow-hidden border-b"
+		style="height: 73px;"
 	>
-		<div>
-			<h1 class="text-xl font-black tracking-tight gap-0.5 flex">
-				Torchi<span class="text-primary">.</span>
-			</h1>
-			<p class="font-mono text-[10px] opacity-40">{$auth?.email || 'Guest'}</p>
-		</div>
+		{#if !isSearchMode}
+			<div
+				class="px-5 flex h-full items-center justify-between"
+				in:slideX={{ duration: 200, delay: 80, from: 1 }}
+				out:slideX={{ duration: 120, from: 1 }}
+			>
+				<div>
+					<h1 class="text-xl font-black tracking-tight gap-0.5 flex">
+						Torchi<span class="text-primary">.</span>
+					</h1>
+					<p class="font-mono text-[10px] opacity-40">{$auth?.email || 'Guest'}</p>
+				</div>
+				<div class="gap-1 flex items-center">
+					<button
+						title="검색"
+						onclick={enterSearchMode}
+						class="btn btn-square rounded-xl btn-ghost btn-sm opacity-40 transition-all hover:opacity-100"
+					>
+						<Search />
+					</button>
+					<button
+						title="설정"
+						onclick={() => goto('/app/setting')}
+						class="btn btn-square rounded-xl btn-ghost btn-sm opacity-40 transition-all hover:opacity-100"
+					>
+						<Settings />
+					</button>
+				</div>
+			</div>
+		{:else}
+			<div
+				class="px-3 gap-2 flex h-full items-center"
+				in:slideX={{ duration: 200, delay: 80, from: -1 }}
+				out:slideX={{ duration: 120, from: -1 }}
+			>
+				<button
+					onclick={exitSearchMode}
+					class="btn btn-square rounded-xl btn-ghost btn-sm shrink-0 opacity-50 transition-all hover:opacity-100 active:scale-90"
+					title="뒤로"
+				>
+					<ArrowLeft size={18} />
+				</button>
+				<div
+					class="border-base-content/10 bg-base-content/5 focus-within:border-primary/40 focus-within:bg-base-100 gap-2 rounded-xl px-3 py-2 flex flex-1 items-center border transition-all duration-200"
+				>
+					<Search size={13} class="shrink-0 opacity-30" />
 
-		<div>
-			<!-- <button
-				title="setting "
-				onclick={() => goto('/app/services')}
-				class="btn btn-square btn-ghost btn-sm rounded-xl opacity-40 transition-all hover:opacity-100"
-			>
-				<Server />
-			</button> -->
-			<button
-				title="setting "
-				onclick={() => goto('/app/setting')}
-				class="btn btn-square rounded-xl btn-ghost btn-sm opacity-40 transition-all hover:opacity-100"
-			>
-				<Settings />
-			</button>
-		</div>
+					<!-- 🆕 scope chip (ALL이 아닐 때만 표시) -->
+					{#if selectedServiceId !== 'ALL'}
+						<span
+							class="bg-primary/15 text-primary rounded-md px-2 py-0.5 font-black shrink-0 text-[11px]"
+						>
+							{currentFilterName}
+						</span>
+					{/if}
+
+					<input
+						bind:this={searchInputEl}
+						bind:value={searchInputValue}
+						onkeydown={handleSearchKeydown}
+						type="text"
+						placeholder={selectedServiceId === 'ALL' ? '알림 검색 후 엔터...' : '검색 후 엔터...'}
+						class="placeholder:text-base-content/25 min-w-0 text-sm font-medium flex-1 bg-transparent outline-none"
+					/>
+
+					{#if searchInputValue}
+						<button
+							onclick={clearSearch}
+							class="shrink-0 opacity-30 transition-all hover:opacity-70 active:scale-90"
+						>
+							<X size={13} />
+						</button>
+					{/if}
+				</div>
+			</div>
+		{/if}
 	</header>
 
 	<main class="px-4 relative flex-1">
-		<div class="top-18 py-2 sticky z-20">
-			<div class="gap-2 flex items-center">
-				<!-- 서비스 필터 -->
-				<div class="relative inline-block">
-					<button
-						onclick={toggleFilter}
-						class="btn h-10 gap-2 rounded-sm border-base-content/10 bg-base-100 pr-3 pl-4 shadow-xs btn-sm hover:border-primary hover:bg-base-100 flex items-center border transition-all"
-					>
-						<span class="text-xs font-bold opacity-60">Filter:</span>
-						<span class="text-xs font-black text-primary">{currentFilterName}</span>
-						<ChevronDown
-							size={14}
-							class="opacity-40 transition-transform {isFilterOpen ? 'rotate-180' : ''}"
-						/>
-					</button>
-					{#if isFilterOpen}
-						<div
-							transition:slide={{ duration: 150 }}
-							class="top-12 left-0 w-56 gap-1 rounded-sm border-white/10 bg-base-100/95 p-1 shadow-xl backdrop-blur-xl absolute flex flex-col overflow-hidden border"
+		{#if isSearchMode}
+			<div class="h-4"></div>
+		{:else}
+			<div class="py-2 top-15 sticky z-20">
+				<div class="gap-2 flex items-center">
+					<div class="relative inline-block">
+						<button
+							onclick={toggleFilter}
+							class="btn h-10 gap-2 rounded-sm border-base-content/10 bg-base-100 pr-3 pl-4 shadow-xs btn-sm hover:border-primary hover:bg-base-100 flex items-center border transition-all"
 						>
-							<button
-								onclick={() => selectFilter('ALL')}
-								class="rounded-sm px-4 py-3 text-xs font-bold hover:bg-white/5 flex items-center justify-between text-left transition-colors {selectedServiceId ===
-								'ALL'
-									? 'bg-primary/5 text-primary'
-									: 'opacity-60'}"
+							<span class="text-xs font-bold opacity-60">Filter:</span>
+							<span class="text-xs font-black text-primary">{currentFilterName}</span>
+							<ChevronDown
+								size={14}
+								class="opacity-40 transition-transform {isFilterOpen ? 'rotate-180' : ''}"
+							/>
+						</button>
+						{#if isFilterOpen}
+							<div
+								transition:slide={{ duration: 150 }}
+								class="top-12 left-0 w-56 gap-1 rounded-sm border-white/10 bg-base-100/95 p-1 shadow-xl backdrop-blur-xl absolute flex flex-col overflow-hidden border"
 							>
-								모든 서비스
-								{#if selectedServiceId === 'ALL'}
-									<span class="h-1.5 w-1.5 bg-primary rounded-full"></span>
-								{/if}
-							</button>
-							<div class="mx-2 my-1 bg-white/5 h-px"></div>
-							{#each endpoints as enp}
 								<button
-									onclick={() => selectFilter(enp.id)}
-									class="rounded-sm px-4 py-3 text-xs font-bold hover:bg-base-content/5 flex items-center justify-between text-left transition-colors {selectedServiceId ===
-									enp.name
+									onclick={() => selectFilter('ALL')}
+									class="rounded-sm px-4 py-3 text-xs font-bold hover:bg-white/5 flex items-center justify-between text-left transition-colors {selectedServiceId ===
+									'ALL'
 										? 'bg-primary/5 text-primary'
 										: 'opacity-60'}"
 								>
-									{enp.name}
-									{#if selectedServiceId === enp.id}
+									모든 서비스
+									{#if selectedServiceId === 'ALL'}
 										<span class="h-1.5 w-1.5 bg-primary rounded-full"></span>
 									{/if}
 								</button>
-							{/each}
-						</div>
-						<button
-							title="close"
-							class="inset-0 fixed z-[-1]"
-							onclick={() => (isFilterOpen = false)}
-						></button>
-					{/if}
+								<div class="mx-2 my-1 bg-white/5 h-px"></div>
+								{#each endpoints as enp}
+									<button
+										onclick={() => selectFilter(enp.id)}
+										class="rounded-sm px-4 py-3 text-xs font-bold hover:bg-base-content/5 flex items-center justify-between text-left transition-colors {selectedServiceId ===
+										enp.id
+											? 'bg-primary/5 text-primary'
+											: 'opacity-60'}"
+									>
+										{enp.name}
+										{#if selectedServiceId === enp.id}
+											<span class="h-1.5 w-1.5 bg-primary rounded-full"></span>
+										{/if}
+									</button>
+								{/each}
+							</div>
+							<button
+								title="close"
+								class="inset-0 fixed z-[-1]"
+								onclick={() => (isFilterOpen = false)}
+							></button>
+						{/if}
+					</div>
 				</div>
-
-				<!-- 전체보기 필터 토글 -->
-				<!-- <button
-					onclick={() => (showUnreadOnly = !showUnreadOnly)}
-					class="btn h-10 gap-2 rounded-sm border-base-content/10 bg-base-100 px-4 shadow-xs btn-sm hover:border-primary hover:bg-base-100 flex items-center transition-all {showUnreadOnly
-						? 'border-primary '
-						: ''}"
-				>
-					<span class="text-xs font-bold {showUnreadOnly ? 'text-primary' : 'opacity-60'}">
-						안읽음
-					</span>
-					{#if unreadCount > 0}
-						<span
-							class="bg-primary text-primary-content px-2 py-0.5 font-bold rounded-full text-[10px]"
-						>
-							{unreadCount}
-						</span>
-					{/if}
-				</button> -->
 			</div>
-		</div>
+		{/if}
 
 		<div class="space-y-3 pb-20">
-			{#each filteredList as noti (noti.id)}
+			{#each notifications as noti (noti.id)}
 				<div transition:slide={{ duration: 200, axis: 'y' }}>
 					<div
 						class="group/card rounded-xl px-5 py-4 relative border transition-all
-						{noti.isRead
-							? 'bg-base-content/2 hover:bg-base-content/3 border-transparent opacity-70'
-							: 'bg-primary/12 hover:border-primary/30 hover:bg-primary/9 shadow-sm border-base-content/10'}"
+							{isSearchMode
+							? 'bg-base hover:bg-base-content/3 border-base-content/10'
+							: noti.isRead
+								? 'bg-base-content/2 hover:bg-base-content/3 border-transparent opacity-70'
+								: 'bg-primary/12 hover:border-primary/30 hover:bg-primary/9 shadow-sm border-base-content/10'}"
 					>
 						<div class="mb-2 flex items-center justify-between">
 							<div class="gap-2 flex items-center">
@@ -267,8 +386,8 @@
 										? 'bg-base-content/15'
 										: 'animate-pulse bg-primary shadow-sm shadow-primary/50'}"
 								></div>
-								<span class="font-bold text-xs {noti.isRead ? 'opacity-40' : ''} ">
-									{noti.endpointName}
+								<span class="font-bold text-xs {noti.isRead && !isSearchMode ? 'opacity-40' : ''}">
+									{@html highlight(noti.endpointName ?? '', searchQuery)}
 								</span>
 							</div>
 
@@ -278,8 +397,10 @@
 										<BellOff size={14} />
 									{/if}
 								</span>
-								<span class="font-mono text-xs {noti.isRead ? 'opacity-20' : 'opacity-35'}"
-									>{noti.timestamp}</span
+								<span
+									class="font-mono text-xs {noti.isRead && !isSearchMode
+										? 'opacity-20'
+										: 'opacity-35'}">{noti.timestamp}</span
 								>
 								<button
 									onclick={() => handleDelete(noti.id)}
@@ -299,38 +420,24 @@
 								? 'border-base-content/5 text-base-content/60'
 								: 'border-primary/30 text-base-content/95'}"
 						>
-							{@html linkify(noti.body)}
+							{@html highlight(linkify(noti.body), searchQuery)}
 						</p>
-
-						<!-- {#if noti.actions && noti.actions.length > 0}
-							<div class="mt-4 gap-2 pl-3.5 flex">
-								{#each noti.actions as action}
-									<button
-										onclick={() => handleAction(noti.id, action.type)}
-										class="btn rounded-xl px-4 text-xs font-bold btn-sm transition-transform active:scale-95
-                                        {action.type === 'primary'
-											? 'btn-primary hover:bg-primary/90'
-											: ''}
-                                        {action.type === 'danger'
-											? 'bg-error/10 text-error hover:bg-error/20'
-											: ''}
-                                        {action.type === 'neutral'
-											? 'bg-base-content/5 text-base-content/70 hover:bg-base-content/10'
-											: ''}"
-									>
-										{action.label}
-									</button>
-								{/each}
-							</div>
-						{/if} -->
 					</div>
 				</div>
 			{:else}
 				<div class="py-24 text-center opacity-30 flex flex-col items-center">
-					<p class="text-xs font-mono">NO_NOTIFICATIONS</p>
+					{#if loading}
+						<!-- 로딩 중엔 빈 상태 메시지 숨김 -->
+					{:else if isSearchMode}
+						<Search size={20} class="mb-3 opacity-40" />
+						<p class="text-xs font-mono">검색어 입력 후 엔터</p>
+					{:else}
+						<p class="text-xs font-mono">NO_NOTIFICATIONS</p>
+					{/if}
 				</div>
 			{/each}
-			<div class="flex items-center justify-center" bind:this={observerTarget}>
+
+			<div class="py-4 flex items-center justify-center" bind:this={observerTarget}>
 				{#if loading}
 					<span class="loading loading-spinner loading-lg"></span>
 				{/if}

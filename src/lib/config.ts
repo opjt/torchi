@@ -31,4 +31,4 @@ export const config = getConfig();
 export const PUBLIC_VAPID_KEY = config.vapidKey;
 export const PUBLIC_GITHUB_CLIENT_ID = config.githubClientId;
 
-debugLog('앱 설정:', config);
+debugLog('app config:', config);

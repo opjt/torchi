@@ -91,7 +91,7 @@
 	}
 
 	async function copyEndpoint(token: string, id: string) {
-		const url = `${$page.url.origin}/api/push/${token}`;
+		const url = `${$page.url.origin}/api/v1/push/${token}`;
 		const curlCmd = `curl "${url}" -d 'msg=Hello!'`;
 
 		await navigator.clipboard.writeText(curlCmd);

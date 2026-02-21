@@ -56,12 +56,13 @@ export function transformNotification(apiData: NotificationApiResponse): Display
 export async function getNotifications(
 	cursor?: string,
 	endpointID?: string,
+	searchQuery?: string,
 ): Promise<PaginatedNotiResponse> {
 	let path = `/notifications?limit=20`;
 
 	if (cursor) path += `&cursor=${encodeURIComponent(cursor)}`;
 	if (endpointID && endpointID !== 'ALL') path += `&endpoint_id=${encodeURIComponent(endpointID)}`;
-
+	if (searchQuery) path += `&query=${encodeURIComponent(searchQuery)}`;
 	return await api<PaginatedNotiResponse>(path);
 }
 
