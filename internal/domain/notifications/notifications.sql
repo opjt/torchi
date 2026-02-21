@@ -62,6 +62,10 @@ WHERE n.user_id = $1
   AND n.is_deleted = false
   AND (sqlc.narg('endpoint_id')::uuid IS NULL OR n.endpoint_id = sqlc.narg('endpoint_id'))
   AND (sqlc.narg('last_id')::uuid IS NULL OR n.id < sqlc.narg('last_id'))
+  AND (
+    sqlc.narg('query')::text IS NULL 
+    OR n.body ILIKE '%' || sqlc.narg('query') || '%'
+)
 ORDER BY n.id DESC
 LIMIT $2;
 

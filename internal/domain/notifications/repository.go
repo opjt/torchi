@@ -15,7 +15,7 @@ type NotiRepository interface {
 	Create(context.Context, Noti) (Noti, error)
 	InsertMute(context.Context, Noti) (Noti, error)
 	UpdateStatus(context.Context, Noti) error
-	GetWithCursor(ctx context.Context, userID uuid.UUID, lastID *uuid.UUID, limit int32, endpointID *uuid.UUID) ([]Noti, error)
+	GetWithCursor(ctx context.Context, userID uuid.UUID, lastID *uuid.UUID, limit int32, endpointID *uuid.UUID, query *string) ([]Noti, error)
 	MarkAsReadBefore(ctx context.Context, userID uuid.UUID, lastID uuid.UUID, endpointID *uuid.UUID) error
 	MarkDelete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error
 }
@@ -58,13 +58,14 @@ func (r *notiRepository) MarkAsReadBefore(ctx context.Context, userID uuid.UUID,
 	})
 }
 
-func (r *notiRepository) GetWithCursor(ctx context.Context, userID uuid.UUID, lastID *uuid.UUID, limit int32, endpointID *uuid.UUID) ([]Noti, error) {
+func (r *notiRepository) GetWithCursor(ctx context.Context, userID uuid.UUID, lastID *uuid.UUID, limit int32, endpointID *uuid.UUID, query *string) ([]Noti, error) {
 
 	params := db.GetNotificationsWithCursorParams{
 		UserID:     userID,
 		Limit:      limit,
 		LastID:     lastID,
 		EndpointID: endpointID,
+		Query:      query,
 	}
 
 	rows, err := r.queries.GetNotificationsWithCursor(ctx, params)

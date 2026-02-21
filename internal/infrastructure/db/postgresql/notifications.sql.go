@@ -170,6 +170,10 @@ WHERE n.user_id = $1
   AND n.is_deleted = false
   AND ($3::uuid IS NULL OR n.endpoint_id = $3)
   AND ($4::uuid IS NULL OR n.id < $4)
+  AND (
+    $5::text IS NULL 
+    OR n.body ILIKE '%' || $5 || '%'
+)
 ORDER BY n.id DESC
 LIMIT $2
 `
@@ -179,6 +183,7 @@ type GetNotificationsWithCursorParams struct {
 	Limit      int32
 	EndpointID *uuid.UUID
 	LastID     *uuid.UUID
+	Query      *string
 }
 
 type GetNotificationsWithCursorRow struct {
@@ -198,6 +203,7 @@ func (q *Queries) GetNotificationsWithCursor(ctx context.Context, arg GetNotific
 		arg.Limit,
 		arg.EndpointID,
 		arg.LastID,
+		arg.Query,
 	)
 	if err != nil {
 		return nil, err
