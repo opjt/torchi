@@ -10,7 +10,7 @@
 	} from '$lib/api/notifications';
 	import { auth } from '$lib/client/auth/auth';
 	import { debugLog, linkify } from '$lib/pkg/util';
-	import { ArrowLeft, BellOff, ChevronDown, Search, Settings, X } from 'lucide-svelte';
+	import { BellOff, ChevronDown, ChevronLeft, Search, Settings, X } from 'lucide-svelte';
 	import { onMount, tick } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
@@ -35,7 +35,7 @@
 	// 엔드포인트 목록
 	let endpoints = $state<Endpoint[]>([]);
 
-	// 💡 선택된 서비스의 "이름"을 찾기 위한 derived
+	// 선택된 서비스의 "이름"을 찾기 위한 derived
 	let currentFilterName = $derived.by(() => {
 		if (selectedServiceId === 'ALL') return '모든 서비스';
 		return endpoints.find((e) => e.id === selectedServiceId)?.name || '알 수 없는 서비스';
@@ -240,7 +240,7 @@
 					</h1>
 					<p class="font-mono text-[10px] opacity-40">{$auth?.email || 'Guest'}</p>
 				</div>
-				<div class="gap-1 flex items-center">
+				<div class="gap-1.5 flex items-center">
 					<button
 						title="검색"
 						onclick={enterSearchMode}
@@ -259,7 +259,7 @@
 			</div>
 		{:else}
 			<div
-				class="px-3 gap-2 flex h-full items-center"
+				class="px-2 gap-2 flex h-full items-center"
 				in:slideX={{ duration: 200, delay: 80, from: -1 }}
 				out:slideX={{ duration: 120, from: -1 }}
 			>
@@ -268,14 +268,14 @@
 					class="btn btn-square rounded-xl btn-ghost btn-sm shrink-0 opacity-50 transition-all hover:opacity-100 active:scale-90"
 					title="뒤로"
 				>
-					<ArrowLeft size={18} />
+					<ChevronLeft size={20} />
 				</button>
 				<div
 					class="border-base-content/10 bg-base-content/5 focus-within:border-primary/40 focus-within:bg-base-100 gap-2 rounded-xl px-3 py-2 flex flex-1 items-center border transition-all duration-200"
 				>
 					<Search size={13} class="shrink-0 opacity-30" />
 
-					<!-- 🆕 scope chip (ALL이 아닐 때만 표시) -->
+					<!-- scope chip (ALL이 아닐 때만 표시) -->
 					{#if selectedServiceId !== 'ALL'}
 						<span
 							class="bg-primary/15 text-primary rounded-md px-2 py-0.5 font-black shrink-0 text-[11px]"
@@ -296,12 +296,18 @@
 					{#if searchInputValue}
 						<button
 							onclick={clearSearch}
-							class="shrink-0 opacity-30 transition-all hover:opacity-70 active:scale-90"
+							class="p-0.5 bg-base-300 shrink-0 rounded-full opacity-30 transition-all hover:opacity-70 active:scale-90"
 						>
 							<X size={13} />
 						</button>
 					{/if}
 				</div>
+				<button
+					onclick={exitSearchMode}
+					class="text-xs p-1 font-bold shrink-0 opacity-80 transition-all hover:opacity-100 active:scale-90"
+				>
+					닫기
+				</button>
 			</div>
 		{/if}
 	</header>
@@ -368,7 +374,7 @@
 			</div>
 		{/if}
 
-		<div class="space-y-3 pb-20">
+		<div class="space-y-3">
 			{#each notifications as noti (noti.id)}
 				<div transition:slide={{ duration: 200, axis: 'y' }}>
 					<div

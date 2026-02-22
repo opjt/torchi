@@ -302,7 +302,7 @@ class PushNotificationManager {
 			// 데모 전용 엔드포인트 호출
 			const subJson = tempSub.toJSON();
 
-			await api<void>(`/api/push-demo`, {
+			await api<void>(`/v1/push-demo`, {
 				method: 'POST',
 				body: {
 					endpoint: subJson.endpoint,
