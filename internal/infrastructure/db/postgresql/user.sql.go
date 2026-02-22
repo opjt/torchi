@@ -23,7 +23,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const findUserById = `-- name: FindUserById :one
-SELECT id, email, created_at, updated_at, terms_agreed
+SELECT id, email, created_at, updated_at, terms_agreed, guest
 FROM users
 WHERE id = $1
 `
@@ -34,6 +34,7 @@ type FindUserByIdRow struct {
 	CreatedAt   time.Time
 	UpdatedAt   *time.Time
 	TermsAgreed bool
+	Guest       bool
 }
 
 func (q *Queries) FindUserById(ctx context.Context, id uuid.UUID) (FindUserByIdRow, error) {
@@ -45,6 +46,7 @@ func (q *Queries) FindUserById(ctx context.Context, id uuid.UUID) (FindUserByIdR
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.TermsAgreed,
+		&i.Guest,
 	)
 	return i, err
 }

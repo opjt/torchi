@@ -68,6 +68,7 @@ type resWhoami struct {
 	UserID      uuid.UUID `json:"user_id"`
 	Email       string    `json:"email"`
 	TermsAgreed bool      `json:"terms_agreed"`
+	IsGuest     bool      `json:"is_guest"`
 }
 
 func (h *UserHandler) Whoami(w http.ResponseWriter, r *http.Request) {
@@ -93,6 +94,7 @@ func (h *UserHandler) Whoami(w http.ResponseWriter, r *http.Request) {
 		UserID:      user.ID,
 		Email:       pkg.SafeDereference(user.Email),
 		TermsAgreed: user.TermsAgreed,
+		IsGuest:     user.IsGuest,
 	}
 	wrapper.RespondJSON(w, http.StatusOK, resp)
 }

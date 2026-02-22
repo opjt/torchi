@@ -78,6 +78,7 @@ func (r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (*User, err
 		Email:       user.Email,
 		CreatedAt:   user.CreatedAt,
 		TermsAgreed: user.TermsAgreed,
+		IsGuest:     user.Guest,
 	}
 	return entity, nil
 }

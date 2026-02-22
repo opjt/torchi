@@ -84,7 +84,7 @@ func (s *AuthService) GuestLogin(ctx context.Context, guestID *uuid.UUID) (Login
 		return LoginResult{}, fmt.Errorf("failed to upsert guest user: %w", err)
 	}
 
-	at, rt, err := s.tokenProvider.CreatePairToken(dbUser.ID, "guest@")
+	at, rt, err := s.tokenProvider.CreatePairToken(dbUser.ID, "guest")
 	if err != nil {
 		return LoginResult{}, err
 	}

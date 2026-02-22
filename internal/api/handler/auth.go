@@ -199,6 +199,7 @@ func (h *AuthHandler) OauthGithubCallback(w http.ResponseWriter, r *http.Request
 	//  GitHub API로 사용자 정보 가져오기
 	at, rt, err := h.service.OauthGithubFlow(r.Context(), code)
 	if err != nil {
+		h.log.Error("failed to get user profile", "error", err)
 		http.Error(w, "Failed to get user profile", http.StatusInternalServerError)
 		return
 	}

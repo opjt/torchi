@@ -8,7 +8,7 @@ RETURNING *;
 
 
 -- name: FindUserById :one
-SELECT id, email, created_at, updated_at, terms_agreed
+SELECT id, email, created_at, updated_at, terms_agreed, guest
 FROM users
 WHERE id = $1;
 
