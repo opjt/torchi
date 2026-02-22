@@ -3,6 +3,7 @@ export interface UserInfo {
 	user_id: string;
 	email?: string;
 	terms_agreed: boolean;
+	is_guest: boolean;
 }
 
 export async function fetchWhoami(): Promise<UserInfo | null> {

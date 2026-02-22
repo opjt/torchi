@@ -172,10 +172,10 @@
 
 						<div class="flex flex-col">
 							<span class="font-bold text-base-content text-[15px]">
-								{$auth?.email?.split('@')[0] ?? 'Torchi User'}님
+								{auth.getDisplayName()}님
 							</span>
 							<span class="text-xs text-base-content/50">
-								{$auth?.email ?? 'user@example.com'}
+								{$auth?.email ?? 'GUEST USER'}
 							</span>
 						</div>
 					</div>

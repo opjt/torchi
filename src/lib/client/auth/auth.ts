@@ -12,6 +12,7 @@ type AuthStore = Readable<AuthState> & {
 	getUser: () => UserInfo | null;
 	hasAgreedToTerms: () => boolean;
 	whenReady: () => Promise<void>;
+	getDisplayName: () => string;
 };
 
 function createAuthStore(): AuthStore {
@@ -63,6 +64,12 @@ function createAuthStore(): AuthStore {
 
 		logout: () => {
 			set(null);
+		},
+		getDisplayName: () => {
+			const state = get({ subscribe });
+			if (!state) return 'Torchi User';
+			if (state.is_guest) return `${state.user_id.slice(0, 8)}`;
+			return state.email?.split('@')[0] ?? 'Torchi User';
 		},
 	};
 
