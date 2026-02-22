@@ -93,7 +93,7 @@ sw.addEventListener('notificationclick', (event) => {
 		sw.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
 			for (const client of clientList) {
 				if (client.url.includes(sw.registration.scope) && 'focus' in client) {
-					return client.navigate(targetUrl).then(() => client.focus());
+					return client.focus().then(() => client.navigate(targetUrl));
 				}
 			}
 			if (sw.clients.openWindow) return sw.clients.openWindow(targetUrl);

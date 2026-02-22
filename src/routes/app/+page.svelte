@@ -5,6 +5,7 @@
 		deleteNotification,
 		getNotifications,
 		markAsReadUntil,
+		postReaction,
 		transformNotification,
 		type DisplayNotification,
 	} from '$lib/api/notifications';
@@ -221,6 +222,10 @@
 			},
 		};
 	}
+	async function handleReaction(id: string, action: string) {
+		await postReaction(id, action);
+		notifications = notifications.map((n) => (n.id === id ? { ...n, reaction: action } : n));
+	}
 </script>
 
 <div class="bg-base-100 font-sans text-base-content flex min-h-screen flex-col">
@@ -424,6 +429,29 @@
 						>
 							{@html highlight(linkify(noti.body), searchQuery)}
 						</p>
+						<!-- 리액션 버튼 -->
+						{#if noti.actions && noti.actions.length > 0}
+							<div class="mt-3 ml-1.5 gap-2 flex">
+								{#if noti.reaction}
+									<!-- 이미 반응한 경우 -->
+									<span class="text-xs font-bold font-mono opacity-40">
+										✓ {noti.reaction}
+									</span>
+								{:else}
+									{#each noti.actions as action, i}
+										<button
+											onclick={() => handleReaction(noti.id, action)}
+											class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95
+                                {i === 0
+												? 'bg-primary/15 text-primary hover:bg-primary/25 border-primary/20 hover:border-primary/40 border'
+												: 'bg-base-content/5 text-base-content/60 hover:bg-base-content/10 border-base-content/10 hover:border-base-content/20 border'}"
+										>
+											{action}
+										</button>
+									{/each}
+								{/if}
+							</div>
+						{/if}
 					</div>
 				</div>
 			{:else}

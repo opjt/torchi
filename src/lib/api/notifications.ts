@@ -8,6 +8,8 @@ export interface NotificationApiResponse {
 	is_read: boolean;
 	created_at: string;
 	mute: boolean;
+	actions: string[] | null;
+	reaction: string | null;
 }
 
 export interface PaginatedNotiResponse {
@@ -24,6 +26,8 @@ export interface DisplayNotification {
 	timestamp: string;
 	createdAt: string;
 	isMute: boolean;
+	actions: string[] | null; // ex) ["승인", "거절"] or null
+	reaction: string | null; // 반응한 리액션 값, 없으면 null
 }
 
 function formatTimestamp(dateString: string): string {
@@ -49,6 +53,8 @@ export function transformNotification(apiData: NotificationApiResponse): Display
 		timestamp: formatTimestamp(apiData.created_at),
 		createdAt: apiData.created_at,
 		isMute: apiData.mute,
+		actions: apiData.actions,
+		reaction: apiData.reaction,
 	};
 }
 
@@ -79,5 +85,13 @@ export async function markAsReadUntil(lastId: string, endpointID?: string): Prom
 export async function deleteNotification(id: string): Promise<void> {
 	await api(`/notifications/${id}`, {
 		method: 'DELETE',
+	});
+}
+
+// 알림 리액션 api
+export async function postReaction(id: string, action: string): Promise<void> {
+	await api(`/v1/react/${id}`, {
+		method: 'POST',
+		body: { reaction: action },
 	});
 }
