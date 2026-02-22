@@ -15,8 +15,15 @@ export async function logout() {
 	auth.logout();
 }
 
-export async function fakeLogin() {
-	await api<void>(`/auth/fake/login`);
+export async function guestLogin() {
+	const userId = localStorage.getItem('guest_user_id');
+
+	const res = await api<{ user_id: string }>(`/auth/guest`, {
+		method: 'POST',
+		body: { user_id: userId ?? null },
+	});
+
+	localStorage.setItem('guest_user_id', res.user_id);
 	await auth.init();
 	goto(resolve('/app'));
 }

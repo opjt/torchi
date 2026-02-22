@@ -6,7 +6,7 @@
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
 	// 애니메이션 추가
-	import { fakeLogin } from '$lib/client/auth/lifecycle';
+	import { guestLogin } from '$lib/client/auth/lifecycle';
 	import { push } from '$lib/client/pushManager.svelte';
 
 	// PWA 설치 관련 변수
@@ -186,10 +186,10 @@
 			</button>
 
 			<button
-				on:click={fakeLogin}
+				on:click={guestLogin}
 				class="btn h-14 rounded-2xl btn-outline border-base-content/20 hover:bg-base-200 w-full opacity-70"
 			>
-				<span class="font-semibold text-[15px]">다른 계정으로 로그인</span>
+				<span class="font-semibold text-[15px]">게스트로 시작하기</span>
 			</button>
 		</div>
 	</div>
