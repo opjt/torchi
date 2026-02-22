@@ -35,6 +35,7 @@ type ReqRegister struct {
 	UserID             uuid.UUID
 	Body               string
 	NotificationEnable bool
+	Actions            []string
 }
 
 func (s *NotiService) Register(ctx context.Context, req ReqRegister) (noti Noti, err error) {
@@ -42,9 +43,10 @@ func (s *NotiService) Register(ctx context.Context, req ReqRegister) (noti Noti,
 		EndpointID: &req.EndpointID,
 		Body:       req.Body,
 		UserID:     req.UserID,
+		Actions:    req.Actions,
 	}
 
-	if req.NotificationEnable == false {
+	if !req.NotificationEnable {
 		newNoti.Status = notiStatusMute
 		return s.repo.InsertMute(ctx, newNoti)
 	}
@@ -71,4 +73,8 @@ func (s *NotiService) UpdateStatusSent(ctx context.Context, reqID uuid.UUID) err
 		ID:     reqID,
 		Status: notiStatusSent,
 	})
+}
+
+func (s *NotiService) SaveReaction(ctx context.Context, notiID uuid.UUID, reaction string) error {
+	return s.repo.SaveReaction(ctx, notiID, reaction)
 }

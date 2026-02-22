@@ -3,15 +3,17 @@ INSERT INTO notifications (
     endpoint_id,
     endpoint_name,
     user_id,
-    body
+    body,
+    actions
 )
 SELECT 
     e.id, 
     e.name,
     $1,    
-    $2    
+    $2,
+    $3
 FROM endpoints e
-WHERE e.id = $3 
+WHERE e.id = $4
 RETURNING *;
 
 -- name: CreateMuteNotification :one
@@ -20,6 +22,7 @@ INSERT INTO notifications (
     endpoint_name,
     user_id,
     body,
+    actions,
     status,
     read_at
 )
@@ -28,11 +31,18 @@ SELECT
     e.name,
     $1,    
     $2,
-    $3, 
+    $3,
+    $4,
     now()
 FROM endpoints e
-WHERE e.id = $4
+WHERE e.id = $5
 RETURNING *;
+
+-- name: SaveReaction :exec
+UPDATE notifications
+SET reaction = $2,
+    reaction_at = now()
+WHERE id = $1;
 
 -- name: UpdateStatusNotification :exec
 UPDATE notifications
@@ -56,7 +66,10 @@ SELECT
     n.status,
     n.read_at,
     n.created_at,
-    n.endpoint_name
+    n.endpoint_name,
+    n.actions,
+    n.reaction,
+    n.reaction_at
 FROM notifications n
 WHERE n.user_id = $1 
   AND n.is_deleted = false

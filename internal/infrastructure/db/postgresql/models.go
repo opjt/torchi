@@ -26,6 +26,9 @@ type Notification struct {
 	EndpointName string
 	UserID       uuid.UUID
 	Body         string
+	Actions      []string
+	Reaction     *string
+	ReactionAt   *time.Time
 	Status       *string
 	ReadAt       *time.Time
 	IsDeleted    bool

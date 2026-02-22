@@ -81,12 +81,15 @@ func (h *NotiHandler) Read(ctx context.Context, req reqReadNoti) (interface{}, e
 }
 
 type resNoti struct {
-	ID           uuid.UUID `json:"id"` // 클라이언트가 커서로 쓸 ID
-	EndpointName string    `json:"endpoint_name"`
-	Body         string    `json:"body"`
-	IsRead       bool      `json:"is_read"`
-	CreatedAt    time.Time `json:"created_at"`
-	Mute         bool      `json:"mute"`
+	ID           uuid.UUID  `json:"id"` // 클라이언트가 커서로 쓸 ID
+	EndpointName string     `json:"endpoint_name"`
+	Body         string     `json:"body"`
+	IsRead       bool       `json:"is_read"`
+	CreatedAt    time.Time  `json:"created_at"`
+	Mute         bool       `json:"mute"`
+	Actions      []string   `json:"actions"`
+	Reaction     *string    `json:"reaction"`
+	ReactionAt   *time.Time `json:"reaction_at"`
 }
 
 // 무한 스크롤 전용 응답 컨테이너
@@ -149,6 +152,9 @@ func (h *NotiHandler) GetList(w http.ResponseWriter, r *http.Request) {
 			IsRead:       bool(noti.ReadAt != nil),
 			CreatedAt:    noti.CreatedAt,
 			Mute:         noti.IsMute(),
+			Actions:      noti.Actions,
+			Reaction:     noti.Reaction,
+			ReactionAt:   noti.ReactionAt,
 		}
 	}
 

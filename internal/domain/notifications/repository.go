@@ -18,6 +18,7 @@ type NotiRepository interface {
 	GetWithCursor(ctx context.Context, userID uuid.UUID, lastID *uuid.UUID, limit int32, endpointID *uuid.UUID, query *string) ([]Noti, error)
 	MarkAsReadBefore(ctx context.Context, userID uuid.UUID, lastID uuid.UUID, endpointID *uuid.UUID) error
 	MarkDelete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error
+	SaveReaction(ctx context.Context, notiID uuid.UUID, reaction string) error
 }
 
 func NewNotiRepository(queries *db.Queries) NotiRepository {
@@ -29,10 +30,11 @@ func NewNotiRepository(queries *db.Queries) NotiRepository {
 func (r *notiRepository) InsertMute(ctx context.Context, noti Noti) (Noti, error) {
 	statusStr := string(noti.Status)
 	createdRow, err := r.queries.CreateMuteNotification(ctx, db.CreateMuteNotificationParams{
-		UserID: noti.UserID,
-		Body:   noti.Body,
-		Status: &statusStr,
-		ID:     *noti.EndpointID,
+		UserID:  noti.UserID,
+		Body:    noti.Body,
+		Status:  &statusStr,
+		ID:      *noti.EndpointID,
+		Actions: noti.Actions,
 	})
 	entity := Noti{
 		ID:         createdRow.ID,
@@ -81,7 +83,6 @@ func (r *notiRepository) GetWithCursor(ctx context.Context, userID uuid.UUID, la
 		}
 
 		result = append(result, Noti{
-
 			ID:           row.ID,
 			EndpointID:   row.EndpointID,
 			EndpointName: row.EndpointName,
@@ -90,6 +91,9 @@ func (r *notiRepository) GetWithCursor(ctx context.Context, userID uuid.UUID, la
 			Status:       s,
 			ReadAt:       row.ReadAt,
 			CreatedAt:    row.CreatedAt,
+			Actions:      row.Actions,
+			Reaction:     row.Reaction,
+			ReactionAt:   row.ReactionAt,
 		})
 	}
 
@@ -98,9 +102,10 @@ func (r *notiRepository) GetWithCursor(ctx context.Context, userID uuid.UUID, la
 
 func (r *notiRepository) Create(ctx context.Context, noti Noti) (Noti, error) {
 	createdRow, err := r.queries.CreateNotification(ctx, db.CreateNotificationParams{
-		ID:     *noti.EndpointID,
-		Body:   noti.Body,
-		UserID: noti.UserID,
+		ID:      *noti.EndpointID,
+		Body:    noti.Body,
+		UserID:  noti.UserID,
+		Actions: noti.Actions,
 	})
 	entity := Noti{
 		ID:         createdRow.ID,
@@ -117,4 +122,11 @@ func (r *notiRepository) UpdateStatus(ctx context.Context, noti Noti) error {
 		Status: &status,
 	})
 	return err
+}
+
+func (r *notiRepository) SaveReaction(ctx context.Context, notiID uuid.UUID, reaction string) error {
+	return r.queries.SaveReaction(ctx, db.SaveReactionParams{
+		ID:       notiID,
+		Reaction: &reaction,
+	})
 }

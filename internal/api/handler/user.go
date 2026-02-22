@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"torchi/internal/api/wrapper"
 	"torchi/internal/domain/user"
-	"torchi/internal/pkg"
 	"torchi/internal/pkg/config"
 	"torchi/internal/pkg/log"
 	"torchi/internal/pkg/token"
@@ -66,7 +65,7 @@ func (h *UserHandler) TermsAgree(ctx context.Context, _ interface{}) (interface{
 
 type resWhoami struct {
 	UserID      uuid.UUID `json:"user_id"`
-	Email       string    `json:"email"`
+	Email       *string   `json:"email"`
 	TermsAgreed bool      `json:"terms_agreed"`
 	IsGuest     bool      `json:"is_guest"`
 }
@@ -92,7 +91,7 @@ func (h *UserHandler) Whoami(w http.ResponseWriter, r *http.Request) {
 
 	resp := resWhoami{
 		UserID:      user.ID,
-		Email:       pkg.SafeDereference(user.Email),
+		Email:       user.Email,
 		TermsAgreed: user.TermsAgreed,
 		IsGuest:     user.IsGuest,
 	}

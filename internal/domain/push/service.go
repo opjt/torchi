@@ -12,6 +12,7 @@ import (
 	"torchi/internal/pkg/log"
 
 	"github.com/SherClockHolmes/webpush-go"
+	"github.com/google/uuid"
 )
 
 type PushService struct {
@@ -21,6 +22,8 @@ type PushService struct {
 	tokenService    *token.TokenService
 	endpointService *endpoint.EndpointService
 	notiService     *notifications.NotiService
+
+	waitMap *WaitMap
 }
 
 func NewPushService(
@@ -37,6 +40,7 @@ func NewPushService(
 		tokenService:    tokenService,
 		endpointService: endpointService,
 		notiService:     notiService,
+		waitMap:         NewWaitMap(), // TODO: FX로 주입
 	}
 }
 
@@ -184,4 +188,67 @@ func (s *PushService) pushNotification(token token.Token, title, body string) er
 	}
 	return nil
 
+}
+
+func (s *PushService) PushAndWait(ctx context.Context, endpointToken string, message string, actions []string) (string, error) {
+	endpoint, err := s.endpointService.FindByToken(ctx, endpointToken)
+	if err != nil {
+		return "", err
+	}
+	if endpoint == nil {
+		return "", errors.New("endpoint not found")
+	}
+
+	userID := endpoint.UserID
+
+	tokens, err := s.tokenService.FindByUserID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+
+	noti, err := s.notiService.Register(ctx, notifications.ReqRegister{
+		EndpointID:         endpoint.ID,
+		UserID:             userID,
+		Body:               message,
+		Actions:            actions,
+		NotificationEnable: endpoint.NotificationEnable,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if endpoint.NotificationEnable {
+		for _, token := range tokens {
+			if err := s.pushNotification(token, endpoint.Name, message); err != nil {
+				return "", err
+			}
+		}
+		if err = s.notiService.UpdateStatusSent(ctx, noti.ID); err != nil {
+			return "", err
+		}
+	}
+
+	// 채널 등록 후 대기
+	ch := make(chan string, 1)
+	s.waitMap.Set(noti.ID.String(), ch)
+	defer s.waitMap.Delete(noti.ID.String())
+
+	select {
+	case reaction := <-ch:
+		return reaction, nil
+	case <-ctx.Done():
+		return "", context.DeadlineExceeded
+	}
+}
+
+func (s *PushService) React(ctx context.Context, notiID uuid.UUID, reaction string) error {
+	if err := s.notiService.SaveReaction(ctx, notiID, reaction); err != nil {
+		return err
+	}
+
+	if ch, ok := s.waitMap.Get(notiID.String()); ok {
+		ch <- reaction
+	}
+
+	return nil
 }

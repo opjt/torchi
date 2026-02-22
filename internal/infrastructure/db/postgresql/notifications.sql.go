@@ -18,6 +18,7 @@ INSERT INTO notifications (
     endpoint_name,
     user_id,
     body,
+    actions,
     status,
     read_at
 )
@@ -26,24 +27,27 @@ SELECT
     e.name,
     $1,    
     $2,
-    $3, 
+    $3,
+    $4,
     now()
 FROM endpoints e
-WHERE e.id = $4
-RETURNING id, endpoint_id, endpoint_name, user_id, body, status, read_at, is_deleted, created_at
+WHERE e.id = $5
+RETURNING id, endpoint_id, endpoint_name, user_id, body, actions, reaction, reaction_at, status, read_at, is_deleted, created_at
 `
 
 type CreateMuteNotificationParams struct {
-	UserID uuid.UUID
-	Body   string
-	Status *string
-	ID     uuid.UUID
+	UserID  uuid.UUID
+	Body    string
+	Actions []string
+	Status  *string
+	ID      uuid.UUID
 }
 
 func (q *Queries) CreateMuteNotification(ctx context.Context, arg CreateMuteNotificationParams) (Notification, error) {
 	row := q.db.QueryRow(ctx, createMuteNotification,
 		arg.UserID,
 		arg.Body,
+		arg.Actions,
 		arg.Status,
 		arg.ID,
 	)
@@ -54,6 +58,9 @@ func (q *Queries) CreateMuteNotification(ctx context.Context, arg CreateMuteNoti
 		&i.EndpointName,
 		&i.UserID,
 		&i.Body,
+		&i.Actions,
+		&i.Reaction,
+		&i.ReactionAt,
 		&i.Status,
 		&i.ReadAt,
 		&i.IsDeleted,
@@ -67,26 +74,34 @@ INSERT INTO notifications (
     endpoint_id,
     endpoint_name,
     user_id,
-    body
+    body,
+    actions
 )
 SELECT 
     e.id, 
     e.name,
     $1,    
-    $2    
+    $2,
+    $3
 FROM endpoints e
-WHERE e.id = $3 
-RETURNING id, endpoint_id, endpoint_name, user_id, body, status, read_at, is_deleted, created_at
+WHERE e.id = $4
+RETURNING id, endpoint_id, endpoint_name, user_id, body, actions, reaction, reaction_at, status, read_at, is_deleted, created_at
 `
 
 type CreateNotificationParams struct {
-	UserID uuid.UUID
-	Body   string
-	ID     uuid.UUID
+	UserID  uuid.UUID
+	Body    string
+	Actions []string
+	ID      uuid.UUID
 }
 
 func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error) {
-	row := q.db.QueryRow(ctx, createNotification, arg.UserID, arg.Body, arg.ID)
+	row := q.db.QueryRow(ctx, createNotification,
+		arg.UserID,
+		arg.Body,
+		arg.Actions,
+		arg.ID,
+	)
 	var i Notification
 	err := row.Scan(
 		&i.ID,
@@ -94,6 +109,9 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 		&i.EndpointName,
 		&i.UserID,
 		&i.Body,
+		&i.Actions,
+		&i.Reaction,
+		&i.ReactionAt,
 		&i.Status,
 		&i.ReadAt,
 		&i.IsDeleted,
@@ -104,7 +122,7 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 
 const findNotificationByUserID = `-- name: FindNotificationByUserID :many
 SELECT 
-    n.id, n.endpoint_id, n.endpoint_name, n.user_id, n.body, n.status, n.read_at, n.is_deleted, n.created_at,
+    n.id, n.endpoint_id, n.endpoint_name, n.user_id, n.body, n.actions, n.reaction, n.reaction_at, n.status, n.read_at, n.is_deleted, n.created_at,
     e.name as endpoint_name
 FROM notifications n
 JOIN endpoints e ON n.endpoint_id = e.id
@@ -117,6 +135,9 @@ type FindNotificationByUserIDRow struct {
 	EndpointName   string
 	UserID         uuid.UUID
 	Body           string
+	Actions        []string
+	Reaction       *string
+	ReactionAt     *time.Time
 	Status         *string
 	ReadAt         *time.Time
 	IsDeleted      bool
@@ -139,6 +160,9 @@ func (q *Queries) FindNotificationByUserID(ctx context.Context, userID uuid.UUID
 			&i.EndpointName,
 			&i.UserID,
 			&i.Body,
+			&i.Actions,
+			&i.Reaction,
+			&i.ReactionAt,
 			&i.Status,
 			&i.ReadAt,
 			&i.IsDeleted,
@@ -164,7 +188,10 @@ SELECT
     n.status,
     n.read_at,
     n.created_at,
-    n.endpoint_name
+    n.endpoint_name,
+    n.actions,
+    n.reaction,
+    n.reaction_at
 FROM notifications n
 WHERE n.user_id = $1 
   AND n.is_deleted = false
@@ -195,6 +222,9 @@ type GetNotificationsWithCursorRow struct {
 	ReadAt       *time.Time
 	CreatedAt    time.Time
 	EndpointName string
+	Actions      []string
+	Reaction     *string
+	ReactionAt   *time.Time
 }
 
 func (q *Queries) GetNotificationsWithCursor(ctx context.Context, arg GetNotificationsWithCursorParams) ([]GetNotificationsWithCursorRow, error) {
@@ -221,6 +251,9 @@ func (q *Queries) GetNotificationsWithCursor(ctx context.Context, arg GetNotific
 			&i.ReadAt,
 			&i.CreatedAt,
 			&i.EndpointName,
+			&i.Actions,
+			&i.Reaction,
+			&i.ReactionAt,
 		); err != nil {
 			return nil, err
 		}
@@ -266,6 +299,23 @@ type MarkNotificationsAsReadBeforeParams struct {
 
 func (q *Queries) MarkNotificationsAsReadBefore(ctx context.Context, arg MarkNotificationsAsReadBeforeParams) error {
 	_, err := q.db.Exec(ctx, markNotificationsAsReadBefore, arg.UserID, arg.ID, arg.EndpointID)
+	return err
+}
+
+const saveReaction = `-- name: SaveReaction :exec
+UPDATE notifications
+SET reaction = $2,
+    reaction_at = now()
+WHERE id = $1
+`
+
+type SaveReactionParams struct {
+	ID       uuid.UUID
+	Reaction *string
+}
+
+func (q *Queries) SaveReaction(ctx context.Context, arg SaveReactionParams) error {
+	_, err := q.db.Exec(ctx, saveReaction, arg.ID, arg.Reaction)
 	return err
 }
 

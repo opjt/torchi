@@ -32,6 +32,9 @@ type Noti struct {
 	CreatedAt    time.Time
 	ReadAt       *time.Time
 	IsDeleted    bool
+	Actions      []string
+	Reaction     *string
+	ReactionAt   *time.Time
 }
 
 func (n *Noti) IsMute() bool {
