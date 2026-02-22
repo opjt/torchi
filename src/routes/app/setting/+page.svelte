@@ -362,7 +362,7 @@
 							/>
 							<div class="top-1.5 right-1 gap-1 absolute flex">
 								<a
-									href="/app/guide3?token={endpoint.token}"
+									href="/app/guide?token={endpoint.token}"
 									class="btn btn-square rounded-lg btn-ghost btn-xs hover:bg-primary/10 hover:text-primary"
 									title="이용 가이드"
 								>
