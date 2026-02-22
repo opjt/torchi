@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go build -ldflags="-s -w" -o torchi
     
 
-# 2. runtime stage
+# 2. runtime stage 
 FROM gcr.io/distroless/static-debian12
 
 WORKDIR /app

@@ -5,6 +5,7 @@ on:
     branches: [ "main" ] # 메인에 푸시될 때만 작동
     paths:
       - 'dockerfile'
+  workflow_dispatch:
 
 jobs:
   build-and-push:
