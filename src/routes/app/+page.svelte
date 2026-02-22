@@ -373,10 +373,10 @@
 				<div transition:slide={{ duration: 200, axis: 'y' }}>
 					<div
 						class="group/card rounded-xl px-5 py-4 relative border transition-all
-							{isSearchMode
+                    {isSearchMode
 							? 'bg-base hover:bg-base-content/3 border-base-content/10'
 							: noti.isRead
-								? 'bg-base-content/2 hover:bg-base-content/3 border-transparent opacity-70'
+								? 'bg-base-content/2 hover:bg-base-content/3 border-transparent'
 								: 'bg-primary/12 hover:border-primary/30 hover:bg-primary/9 shadow-sm border-base-content/10'}"
 					>
 						<div class="mb-2 flex items-center justify-between">
@@ -386,26 +386,22 @@
 										? 'bg-base-content/15'
 										: 'animate-pulse bg-primary shadow-sm shadow-primary/50'}"
 								></div>
-								<span class="font-bold text-xs {noti.isRead && !isSearchMode ? 'opacity-40' : ''}">
+								<span class="font-bold text-xs">
 									{@html highlight(noti.endpointName ?? '', searchQuery)}
 								</span>
 							</div>
 
 							<div class="gap-3 flex items-center">
-								<span class="text-xs opacity-30">
-									{#if noti.isMute}
+								{#if noti.isMute}
+									<span class="text-xs opacity-30">
 										<BellOff size={14} />
-									{/if}
-								</span>
-								<span
-									class="font-mono text-xs {noti.isRead && !isSearchMode
-										? 'opacity-20'
-										: 'opacity-35'}">{noti.timestamp}</span
-								>
+									</span>
+								{/if}
+								<span class="font-mono text-xs opacity-35">{noti.timestamp}</span>
 								<button
 									onclick={() => handleDelete(noti.id)}
 									class="p-1.5 transition-all hover:opacity-100 active:scale-90 {noti.isRead
-										? 'cursor-default opacity-20'
+										? 'hover:text-base-content opacity-30'
 										: 'hover:text-primary opacity-50'}"
 									title="삭제"
 								>
@@ -416,8 +412,8 @@
 
 						<p
 							class="pl-3.5 leading-relaxed font-medium border-l text-[14px] whitespace-pre-wrap
-							{noti.isRead
-								? 'border-base-content/5 text-base-content/60'
+                    {noti.isRead
+								? 'border-base-content/10 text-base-content/75'
 								: 'border-primary/30 text-base-content/95'}"
 						>
 							{@html highlight(linkify(noti.body), searchQuery)}
