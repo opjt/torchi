@@ -46,6 +46,18 @@ func (p *TokenProvider) CreateRefreshToken(userID uuid.UUID, email string) (stri
 	return p.generateToken(userID, email, p.refreshExpiry)
 }
 
+func (p *TokenProvider) CreatePairToken(userID uuid.UUID, email string) (string, string, error) {
+	access, err := p.CreateAccessToken(userID, email)
+	if err != nil {
+		return "", "", err
+	}
+	refresh, err := p.CreateRefreshToken(userID, email)
+	if err != nil {
+		return "", "", err
+	}
+	return access, refresh, nil
+}
+
 // 내부 공통 토큰 생성 로직
 func (p *TokenProvider) generateToken(userID uuid.UUID, email string, expiry time.Duration) (string, error) {
 	claims := &Claims{

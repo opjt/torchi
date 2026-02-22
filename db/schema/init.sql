@@ -1,7 +1,8 @@
 -- users
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
-    email TEXT NOT NULL UNIQUE,
+    email TEXT,
+    guest BOOLEAN NOT NULL DEFAULT false,
     terms_agreed BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP

@@ -30,7 +30,7 @@ WHERE id = $1
 
 type FindUserByIdRow struct {
 	ID          uuid.UUID
-	Email       string
+	Email       *string
 	CreatedAt   time.Time
 	UpdatedAt   *time.Time
 	TermsAgreed bool
@@ -45,6 +45,26 @@ func (q *Queries) FindUserById(ctx context.Context, id uuid.UUID) (FindUserByIdR
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.TermsAgreed,
+	)
+	return i, err
+}
+
+const insertGuestUser = `-- name: InsertGuestUser :one
+INSERT INTO users (guest, terms_agreed)
+VALUES (true, true)
+RETURNING id, email, guest, terms_agreed, created_at, updated_at
+`
+
+func (q *Queries) InsertGuestUser(ctx context.Context) (User, error) {
+	row := q.db.QueryRow(ctx, insertGuestUser)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Guest,
+		&i.TermsAgreed,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -66,15 +86,16 @@ VALUES ($1, now())
 ON CONFLICT (email) 
 DO UPDATE SET 
     updated_at = EXCLUDED.updated_at
-RETURNING id, email, terms_agreed, created_at, updated_at
+RETURNING id, email, guest, terms_agreed, created_at, updated_at
 `
 
-func (q *Queries) UpsertUserByEmail(ctx context.Context, email string) (User, error) {
+func (q *Queries) UpsertUserByEmail(ctx context.Context, email *string) (User, error) {
 	row := q.db.QueryRow(ctx, upsertUserByEmail, email)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
+		&i.Guest,
 		&i.TermsAgreed,
 		&i.CreatedAt,
 		&i.UpdatedAt,

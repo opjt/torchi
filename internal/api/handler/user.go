@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"torchi/internal/api/wrapper"
 	"torchi/internal/domain/user"
+	"torchi/internal/pkg"
 	"torchi/internal/pkg/config"
 	"torchi/internal/pkg/log"
 	"torchi/internal/pkg/token"
@@ -90,7 +91,7 @@ func (h *UserHandler) Whoami(w http.ResponseWriter, r *http.Request) {
 
 	resp := resWhoami{
 		UserID:      user.ID,
-		Email:       user.Email,
+		Email:       pkg.SafeDereference(user.Email),
 		TermsAgreed: user.TermsAgreed,
 	}
 	wrapper.RespondJSON(w, http.StatusOK, resp)

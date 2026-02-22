@@ -5,11 +5,13 @@ import (
 	"net/http"
 	"torchi/internal/api/wrapper"
 	"torchi/internal/domain/auth"
+	"torchi/internal/domain/common"
 	"torchi/internal/domain/token"
 	"torchi/internal/pkg/config"
 	"torchi/internal/pkg/log"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type AuthHandler struct {
@@ -45,6 +47,7 @@ func (h *AuthHandler) Routes() chi.Router {
 	r.Get("/github/callback", h.OauthGithubCallback)
 	r.Post("/logout", h.Logout)
 	r.Post("/refresh", h.Refresh)
+	r.Post("/guest", h.GuestLogin)
 
 	if h.env.Stage == config.StageDev {
 		r.Get("/fake/login", h.FakeLogin)
@@ -110,6 +113,39 @@ func (h *AuthHandler) FakeLogin(w http.ResponseWriter, r *http.Request) {
 
 	h.setAuthCookies(w, at, rt)
 	wrapper.RespondJSON(w, http.StatusOK, nil)
+}
+
+func (h *AuthHandler) GuestLogin(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		UserID *string `json:"user_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.log.Error("failed to decode request body", "error", err)
+		wrapper.RespondJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	var userID *uuid.UUID
+	if req.UserID != nil {
+		id, err := uuid.Parse(*req.UserID)
+		if err != nil {
+			wrapper.RespondJSON(w, http.StatusBadRequest, common.ErrBadRequest)
+			return
+		}
+		userID = &id
+	}
+
+	loginResult, err := h.service.GuestLogin(r.Context(), userID)
+	if err != nil {
+		wrapper.RespondJSON(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	h.setAuthCookies(w, loginResult.AT, loginResult.RT)
+	wrapper.RespondJSON(w, http.StatusOK, map[string]string{
+		"user_id": loginResult.UserID.String(),
+	})
 }
 
 type LogoutRequest struct {

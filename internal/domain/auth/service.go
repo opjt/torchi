@@ -72,7 +72,30 @@ func (s *AuthService) TestLogin(ctx context.Context) (string, string, error) {
 
 }
 
-// TODO: 플랫폼별 분리가 필요함(Github, ...)
+type LoginResult struct {
+	UserID uuid.UUID
+	AT     string
+	RT     string
+}
+
+func (s *AuthService) GuestLogin(ctx context.Context, guestID *uuid.UUID) (LoginResult, error) {
+	dbUser, err := s.userService.UpsertGuestUser(ctx, guestID)
+	if err != nil {
+		return LoginResult{}, fmt.Errorf("failed to upsert guest user: %w", err)
+	}
+
+	at, rt, err := s.tokenProvider.CreatePairToken(dbUser.ID, "guest@")
+	if err != nil {
+		return LoginResult{}, err
+	}
+
+	return LoginResult{
+		UserID: dbUser.ID,
+		AT:     at,
+		RT:     rt,
+	}, nil
+}
+
 type githubTokenResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
@@ -88,17 +111,22 @@ func (s *AuthService) OauthGithubFlow(ctx context.Context, code string) (at stri
 	if err != nil {
 		return at, rt, err
 	}
-	dbUser, err := s.userService.UpsertUserByEmail(ctx, githubUser.Email)
+	dbUser, err := s.userService.UpsertUserByEmail(ctx, githubUser.Email) // TODO: 이메일이 없을 수도 있음
 	if err != nil {
 		return at, rt, err
 	}
 
+	var email string
+	if dbUser.Email != nil {
+		email = *dbUser.Email
+	}
+
 	// 페어 토큰 생성
-	at, err = s.tokenProvider.CreateAccessToken(dbUser.ID, dbUser.Email)
+	at, err = s.tokenProvider.CreateAccessToken(dbUser.ID, email)
 	if err != nil {
 		return at, rt, err
 	}
-	rt, err = s.tokenProvider.CreateRefreshToken(dbUser.ID, dbUser.Email)
+	rt, err = s.tokenProvider.CreateRefreshToken(dbUser.ID, email)
 	if err != nil {
 		return at, rt, err
 	}

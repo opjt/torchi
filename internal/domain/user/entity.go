@@ -8,7 +8,8 @@ import (
 
 type User struct {
 	ID          uuid.UUID
-	Email       string
+	Email       *string
+	IsGuest     bool
 	TermsAgreed bool
 	CreatedAt   time.Time
 }

@@ -20,3 +20,9 @@ WHERE id = $1;
 -- name: DeleteUser :exec
 DELETE FROM users
 WHERE id = $1;
+
+-- name: InsertGuestUser :one
+INSERT INTO users (guest, terms_agreed)
+VALUES (true, true)
+RETURNING *;
+
