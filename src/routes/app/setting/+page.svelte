@@ -13,7 +13,17 @@
 	import { api } from '$lib/pkg/fetch';
 	import { auth } from '$lib/client/auth/auth';
 
-	import { Bell, BellOff, ChevronLeft, Copy, Plus, Trash2, User } from 'lucide-svelte';
+	import {
+		Bell,
+		BellOff,
+		BookOpen,
+		Braces,
+		ChevronLeft,
+		Copy,
+		Plus,
+		Trash2,
+		User,
+	} from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
 	import * as Dialog from '$lib/components/ui/dialog/index';
@@ -92,9 +102,8 @@
 
 	async function copyEndpoint(token: string, id: string) {
 		const url = `${$page.url.origin}/api/v1/push/${token}`;
-		const curlCmd = `curl "${url}" -d 'msg=Hello!'`;
 
-		await navigator.clipboard.writeText(curlCmd);
+		await navigator.clipboard.writeText(url);
 		copiedId = id;
 		setTimeout(() => (copiedId = null), 1000);
 	}
@@ -349,18 +358,27 @@
 								type="text"
 								readonly
 								value="{$page.url.origin}/api/v1/push/{endpoint.token}"
-								class="rounded-xl border-base-content/5 bg-base-100 py-2.5 pr-10 pl-3 font-mono w-full truncate border text-[10px] opacity-70 transition-opacity focus:opacity-100 focus:outline-none"
+								class="rounded-xl border-base-content/5 bg-base-100 py-2.5 pr-20 pl-3 font-mono w-full truncate border text-[10px] opacity-70 transition-opacity focus:opacity-100 focus:outline-none"
 							/>
-							<button
-								onclick={() => copyEndpoint(endpoint.token, endpoint.id)}
-								class="btn top-1.5 right-1 btn-square rounded-lg btn-ghost btn-xs hover:bg-primary/10 hover:text-primary absolute"
-							>
-								{#if copiedId === endpoint.id}
-									<span class="font-bold text-success text-[9px]">V</span>
-								{:else}
-									<Copy size={12} />
-								{/if}
-							</button>
+							<div class="top-1.5 right-1 gap-1 absolute flex">
+								<a
+									href="/app/guide3?token={endpoint.token}"
+									class="btn btn-square rounded-lg btn-ghost btn-xs hover:bg-primary/10 hover:text-primary"
+									title="이용 가이드"
+								>
+									<Braces size={12} />
+								</a>
+								<button
+									onclick={() => copyEndpoint(endpoint.token, endpoint.id)}
+									class="btn btn-square rounded-lg btn-ghost btn-xs hover:bg-primary/10 hover:text-primary"
+								>
+									{#if copiedId === endpoint.id}
+										<span class="font-bold text-success text-[9px]">V</span>
+									{:else}
+										<Copy size={12} />
+									{/if}
+								</button>
+							</div>
 						</div>
 					</div>
 				{/each}
