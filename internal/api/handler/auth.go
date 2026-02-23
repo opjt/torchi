@@ -96,7 +96,7 @@ func (h *AuthHandler) setAuthCookies(w http.ResponseWriter, accessToken, refresh
 	http.SetCookie(w, &http.Cookie{
 		Name:     RefreshCookieKey,
 		Value:    refreshToken,
-		Path:     "/auth/refresh",
+		Path:     "/api/auth/refresh",
 		HttpOnly: true,
 		Secure:   !config.IsDev(h.env.Stage),
 		SameSite: http.SameSiteLaxMode,
