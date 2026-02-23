@@ -231,12 +231,24 @@ func (s *PushService) PushAndWait(ctx context.Context, endpointToken string, mes
 	// 채널 등록 후 대기
 	ch := make(chan string, 1)
 	s.waitMap.Set(noti.ID.String(), ch)
-	defer s.waitMap.Delete(noti.ID.String())
+	reacted := false
+
+	defer func() {
+		s.waitMap.Delete(noti.ID.String())
+		if reacted {
+			return
+		}
+		if err := s.notiService.UpdateStatusTimeout(context.Background(), noti.ID); err != nil {
+			s.log.Error("update status timeout", "err", err)
+		}
+	}()
 
 	select {
 	case reaction := <-ch:
+		reacted = true
 		return reaction, nil
 	case <-ctx.Done():
+		s.log.Debug("PushAndWait timeout")
 		return "", context.DeadlineExceeded
 	}
 }

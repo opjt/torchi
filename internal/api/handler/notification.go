@@ -90,6 +90,7 @@ type resNoti struct {
 	Actions      []string   `json:"actions"`
 	Reaction     *string    `json:"reaction"`
 	ReactionAt   *time.Time `json:"reaction_at"`
+	Status       string     `json:"status"`
 }
 
 // 무한 스크롤 전용 응답 컨테이너
@@ -155,6 +156,7 @@ func (h *NotiHandler) GetList(w http.ResponseWriter, r *http.Request) {
 			Actions:      noti.Actions,
 			Reaction:     noti.Reaction,
 			ReactionAt:   noti.ReactionAt,
+			Status:       string(noti.Status),
 		}
 	}
 

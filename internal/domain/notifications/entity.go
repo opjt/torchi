@@ -16,10 +16,11 @@ notifications
 type notiStatus string
 
 const (
-	notiStatusPending notiStatus = "pending" // default
-	notiStatusSent    notiStatus = "sent"    // push 전송 완료
-	notiStatusFailed  notiStatus = "failed"  // push 전송 실패
-	notiStatusMute    notiStatus = "mute"    // endpoint의 알림 끈 경우
+	notiStatusPending      notiStatus = "pending"       // default
+	notiStatusSent         notiStatus = "sent"          // push 전송 완료
+	notiStatusFailed       notiStatus = "failed"        // push 전송 실패
+	notiStatusMute         notiStatus = "mute"          // endpoint의 알림 끈 경우
+	notiStatusTimeoutReply notiStatus = "timeout_reply" // 리액션 타임아웃 경우
 )
 
 type Noti struct {
