@@ -433,16 +433,17 @@
 						{#if noti.actions && noti.actions.length > 0}
 							<div class="mt-3 ml-1.5 gap-2 flex">
 								{#if noti.reaction}
-									<!-- 이미 반응한 경우 -->
 									<span class="text-xs font-bold font-mono opacity-40">
 										✓ {noti.reaction}
 									</span>
+								{:else if noti.isExpired}
+									<span class="text-xs font-bold font-mono opacity-30"> ⏱ 시간 초과 </span>
 								{:else}
 									{#each noti.actions as action, i}
 										<button
 											onclick={() => handleReaction(noti.id, action)}
 											class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95
-                                {i === 0
+                    {i === 0
 												? 'bg-primary/15 text-primary hover:bg-primary/25 border-primary/20 hover:border-primary/40 border'
 												: 'bg-base-content/5 text-base-content/60 hover:bg-base-content/10 border-base-content/10 hover:border-base-content/20 border'}"
 										>

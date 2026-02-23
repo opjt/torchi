@@ -1,5 +1,13 @@
 import { api } from '$lib/pkg/fetch';
 
+export type NotificationStatus =
+	| 'pending'
+	| 'sent'
+	| 'failed'
+	| 'mute'
+	| 'timeout_reply'
+	| 'reacted';
+
 // 백엔드 응답 구조와 일치
 export interface NotificationApiResponse {
 	id: string; // 실제 DB UUID
@@ -7,6 +15,7 @@ export interface NotificationApiResponse {
 	body: string;
 	is_read: boolean;
 	created_at: string;
+	status: NotificationStatus;
 	mute: boolean;
 	actions: string[] | null;
 	reaction: string | null;
@@ -28,6 +37,7 @@ export interface DisplayNotification {
 	isMute: boolean;
 	actions: string[] | null; // ex) ["승인", "거절"] or null
 	reaction: string | null; // 반응한 리액션 값, 없으면 null
+	isExpired: boolean; // timeout_reply면 true → 버튼 비활성화용
 }
 
 function formatTimestamp(dateString: string): string {
@@ -55,6 +65,7 @@ export function transformNotification(apiData: NotificationApiResponse): Display
 		isMute: apiData.mute,
 		actions: apiData.actions,
 		reaction: apiData.reaction,
+		isExpired: apiData.status === 'timeout_reply',
 	};
 }
 
