@@ -27,6 +27,12 @@ type ApiResponse<T> = {
 	};
 };
 
+const BASE_URL = '/api';
+
+function buildUrl(path: string) {
+	return path.startsWith(BASE_URL) ? path : `${BASE_URL}${path}`;
+}
+
 // 토큰 갱신 중인지 확인하는 플래그 (중복 요청 방지)
 let isRefreshing = false;
 // 갱신을 기다리는 요청들의 큐 (동시 요청 처리용)
@@ -67,7 +73,6 @@ export async function api<TResponse, TBody = unknown>(
 		signal,
 		toastType = 'error', // 토스트를 직접 컨트롤 하려면 'none' 으로 사용
 	} = options;
-	url = `/api${url}`;
 	// 에러를 던지기 전에 토스트를 처리하는 내부 헬퍼
 	const handleError = (status: number, message?: string, code?: string) => {
 		showToastWrapper(toastType, getErrorMessage(code, message), code);
@@ -80,7 +85,7 @@ export async function api<TResponse, TBody = unknown>(
 		throw error;
 	};
 	const executeRequest = async (): Promise<Response> => {
-		return fetch(url, {
+		return fetch(buildUrl(url), {
 			method,
 			credentials: 'include',
 			headers: { 'Content-Type': 'application/json', ...headers },
