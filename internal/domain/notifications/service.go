@@ -2,19 +2,24 @@ package notifications
 
 import (
 	"context"
+	"time"
+	"torchi/internal/domain/sse"
 
 	"github.com/google/uuid"
 )
 
 type NotiService struct {
-	repo NotiRepository
+	repo      NotiRepository
+	sseBroker *sse.Broker
 }
 
 func NewNotiService(
 	repo NotiRepository,
+	sseBroker *sse.Broker,
 ) *NotiService {
 	return &NotiService{
-		repo: repo,
+		repo:      repo,
+		sseBroker: sseBroker,
 	}
 }
 
@@ -48,8 +53,13 @@ func (s *NotiService) Register(ctx context.Context, req ReqRegister) (noti Noti,
 
 	if !req.NotificationEnable {
 		newNoti.Status = notiStatusMute
-		return s.repo.InsertMute(ctx, newNoti)
+		now := time.Now()
+		newNoti.ReadAt = &now
+	} else if s.sseBroker.HasSubscribers(req.UserID) {
+		now := time.Now()
+		newNoti.ReadAt = &now
 	}
+
 	return s.repo.Create(ctx, newNoti)
 }
 

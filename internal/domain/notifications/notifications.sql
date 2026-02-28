@@ -4,39 +4,21 @@ INSERT INTO notifications (
     endpoint_name,
     user_id,
     body,
-    actions
-)
-SELECT 
-    e.id, 
-    e.name,
-    $1,    
-    $2,
-    $3
-FROM endpoints e
-WHERE e.id = $4
-RETURNING *;
-
--- name: CreateMuteNotification :one
-INSERT INTO notifications (
-    endpoint_id,
-    endpoint_name,
-    user_id,
-    body,
     actions,
     status,
     read_at
 )
-SELECT 
-    e.id, 
+SELECT
+    e.id,
     e.name,
-    $1,    
+    $1,
     $2,
     $3,
-    $4,
-    now()
+    sqlc.narg('status'),
+    sqlc.narg('read_at')
 FROM endpoints e
-WHERE e.id = $5
-RETURNING *;
+WHERE e.id = $4
+RETURNING id, endpoint_id, body, actions, created_at, status, read_at;
 
 -- name: SaveReaction :exec
 UPDATE notifications

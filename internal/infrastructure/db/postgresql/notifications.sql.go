@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const createMuteNotification = `-- name: CreateMuteNotification :one
+const createNotification = `-- name: CreateNotification :one
 INSERT INTO notifications (
     endpoint_id,
     endpoint_name,
@@ -22,70 +22,17 @@ INSERT INTO notifications (
     status,
     read_at
 )
-SELECT 
-    e.id, 
+SELECT
+    e.id,
     e.name,
-    $1,    
+    $1,
     $2,
     $3,
-    $4,
-    now()
-FROM endpoints e
-WHERE e.id = $5
-RETURNING id, endpoint_id, endpoint_name, user_id, body, actions, reaction, reaction_at, status, read_at, is_deleted, created_at
-`
-
-type CreateMuteNotificationParams struct {
-	UserID  uuid.UUID
-	Body    string
-	Actions []string
-	Status  *string
-	ID      uuid.UUID
-}
-
-func (q *Queries) CreateMuteNotification(ctx context.Context, arg CreateMuteNotificationParams) (Notification, error) {
-	row := q.db.QueryRow(ctx, createMuteNotification,
-		arg.UserID,
-		arg.Body,
-		arg.Actions,
-		arg.Status,
-		arg.ID,
-	)
-	var i Notification
-	err := row.Scan(
-		&i.ID,
-		&i.EndpointID,
-		&i.EndpointName,
-		&i.UserID,
-		&i.Body,
-		&i.Actions,
-		&i.Reaction,
-		&i.ReactionAt,
-		&i.Status,
-		&i.ReadAt,
-		&i.IsDeleted,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const createNotification = `-- name: CreateNotification :one
-INSERT INTO notifications (
-    endpoint_id,
-    endpoint_name,
-    user_id,
-    body,
-    actions
-)
-SELECT 
-    e.id, 
-    e.name,
-    $1,    
-    $2,
-    $3
+    $5,
+    $6
 FROM endpoints e
 WHERE e.id = $4
-RETURNING id, endpoint_id, endpoint_name, user_id, body, actions, reaction, reaction_at, status, read_at, is_deleted, created_at
+RETURNING id, endpoint_id, body, actions, created_at, status, read_at
 `
 
 type CreateNotificationParams struct {
@@ -93,29 +40,38 @@ type CreateNotificationParams struct {
 	Body    string
 	Actions []string
 	ID      uuid.UUID
+	Status  *string
+	ReadAt  *time.Time
 }
 
-func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error) {
+type CreateNotificationRow struct {
+	ID         uuid.UUID
+	EndpointID *uuid.UUID
+	Body       string
+	Actions    []string
+	CreatedAt  time.Time
+	Status     *string
+	ReadAt     *time.Time
+}
+
+func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (CreateNotificationRow, error) {
 	row := q.db.QueryRow(ctx, createNotification,
 		arg.UserID,
 		arg.Body,
 		arg.Actions,
 		arg.ID,
+		arg.Status,
+		arg.ReadAt,
 	)
-	var i Notification
+	var i CreateNotificationRow
 	err := row.Scan(
 		&i.ID,
 		&i.EndpointID,
-		&i.EndpointName,
-		&i.UserID,
 		&i.Body,
 		&i.Actions,
-		&i.Reaction,
-		&i.ReactionAt,
+		&i.CreatedAt,
 		&i.Status,
 		&i.ReadAt,
-		&i.IsDeleted,
-		&i.CreatedAt,
 	)
 	return i, err
 }
@@ -317,6 +273,28 @@ type SaveReactionParams struct {
 func (q *Queries) SaveReaction(ctx context.Context, arg SaveReactionParams) error {
 	_, err := q.db.Exec(ctx, saveReaction, arg.ID, arg.Reaction)
 	return err
+}
+
+const saveReactionIfNotExpired = `-- name: SaveReactionIfNotExpired :one
+UPDATE notifications
+SET reaction = $2,
+    reaction_at = now(),
+    status = 'reacted'
+WHERE id = $1
+  AND status != 'expired'
+RETURNING status
+`
+
+type SaveReactionIfNotExpiredParams struct {
+	ID       uuid.UUID
+	Reaction *string
+}
+
+func (q *Queries) SaveReactionIfNotExpired(ctx context.Context, arg SaveReactionIfNotExpiredParams) (*string, error) {
+	row := q.db.QueryRow(ctx, saveReactionIfNotExpired, arg.ID, arg.Reaction)
+	var status *string
+	err := row.Scan(&status)
+	return status, err
 }
 
 const updateStatusNotification = `-- name: UpdateStatusNotification :exec

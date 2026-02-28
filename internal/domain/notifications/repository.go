@@ -13,7 +13,6 @@ type notiRepository struct {
 
 type NotiRepository interface {
 	Create(context.Context, Noti) (Noti, error)
-	InsertMute(context.Context, Noti) (Noti, error)
 	UpdateStatus(context.Context, Noti) error
 	GetWithCursor(ctx context.Context, userID uuid.UUID, lastID *uuid.UUID, limit int32, endpointID *uuid.UUID, query *string) ([]Noti, error)
 	MarkAsReadBefore(ctx context.Context, userID uuid.UUID, lastID uuid.UUID, endpointID *uuid.UUID) error
@@ -25,24 +24,6 @@ func NewNotiRepository(queries *db.Queries) NotiRepository {
 	return &notiRepository{
 		queries: queries,
 	}
-}
-
-func (r *notiRepository) InsertMute(ctx context.Context, noti Noti) (Noti, error) {
-	statusStr := string(noti.Status)
-	createdRow, err := r.queries.CreateMuteNotification(ctx, db.CreateMuteNotificationParams{
-		UserID:  noti.UserID,
-		Body:    noti.Body,
-		Status:  &statusStr,
-		ID:      *noti.EndpointID,
-		Actions: noti.Actions,
-	})
-	entity := Noti{
-		ID:         createdRow.ID,
-		EndpointID: createdRow.EndpointID,
-		Body:       createdRow.Body,
-	}
-	return entity, err
-
 }
 
 func (r *notiRepository) MarkDelete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error {
@@ -101,19 +82,38 @@ func (r *notiRepository) GetWithCursor(ctx context.Context, userID uuid.UUID, la
 }
 
 func (r *notiRepository) Create(ctx context.Context, noti Noti) (Noti, error) {
+	var statusPtr *string
+	if noti.Status != "" {
+		s := string(noti.Status)
+		statusPtr = &s
+	}
+
 	createdRow, err := r.queries.CreateNotification(ctx, db.CreateNotificationParams{
-		ID:      *noti.EndpointID,
-		Body:    noti.Body,
 		UserID:  noti.UserID,
+		Body:    noti.Body,
 		Actions: noti.Actions,
+		ID:      *noti.EndpointID,
+		Status:  statusPtr,
+		ReadAt:  noti.ReadAt,
 	})
-	entity := Noti{
+	if err != nil {
+		return Noti{}, err
+	}
+
+	var s notiStatus
+	if createdRow.Status != nil {
+		s = notiStatus(*createdRow.Status)
+	}
+
+	return Noti{
 		ID:         createdRow.ID,
 		EndpointID: createdRow.EndpointID,
 		Body:       createdRow.Body,
 		Actions:    createdRow.Actions,
-	}
-	return entity, err
+		CreatedAt:  createdRow.CreatedAt,
+		Status:     s,
+		ReadAt:     createdRow.ReadAt,
+	}, nil
 }
 
 func (r *notiRepository) UpdateStatus(ctx context.Context, noti Noti) error {

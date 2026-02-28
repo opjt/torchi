@@ -45,6 +45,13 @@ func (b *Broker) Shutdown() {
 	close(b.done)
 }
 
+// HasSubscribers returns true if there are any subscribers for the userID
+func (b *Broker) HasSubscribers(userID uuid.UUID) bool {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+	return len(b.clients[userID]) > 0
+}
+
 func (b *Broker) Subscribe(userID uuid.UUID) chan SSEEvent {
 	ch := make(chan SSEEvent, 16)
 
