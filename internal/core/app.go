@@ -36,6 +36,7 @@ func RunServer(opt ...fx.Option) {
 		fx.Invoke(run),
 	)
 	app := fx.New(opts)
+	slog.SetDefault(logger.Logger)
 
 	ctx := context.Background()
 	if err := app.Start(ctx); err != nil {

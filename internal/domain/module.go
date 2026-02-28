@@ -5,6 +5,7 @@ import (
 	"torchi/internal/domain/endpoint"
 	"torchi/internal/domain/notifications"
 	"torchi/internal/domain/push"
+	"torchi/internal/domain/sse"
 	"torchi/internal/domain/token"
 	"torchi/internal/domain/user"
 
@@ -19,4 +20,5 @@ var Module = fx.Options(
 	token.Module,
 	endpoint.Module,
 	notifications.Module,
+	sse.Module,
 )

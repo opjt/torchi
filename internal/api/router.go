@@ -18,6 +18,7 @@ func NewRouter(
 	endpointHandler *handler.EndpointHandler,
 	apiHandler *handler.ApiHandler,
 	notiHandler *handler.NotiHandler,
+	sseHandler *handler.SSEHandler,
 
 	tokenProvider *token.TokenProvider,
 	env config.Env,
@@ -41,6 +42,7 @@ func NewRouter(
 			r.Mount("/users", userHandler.Routes())
 			r.Mount("/endpoints", endpointHandler.Routes())
 			r.Mount("/notifications", notiHandler.Routes())
+			r.Mount("/sse", sseHandler.Routes())
 		})
 	})
 
@@ -54,6 +56,7 @@ var routeModule = fx.Module("router",
 		handler.NewUserHandler,
 		handler.NewEndpointHandler,
 		handler.NewNotiHandler,
+		handler.NewSSEHandler,
 
 		// API
 		handler.NewApiHandler,
