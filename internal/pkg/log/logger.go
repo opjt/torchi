@@ -42,6 +42,7 @@ func NewLogger(env config.Env) *Logger {
 	}
 
 	rawLogger := slog.New(handler)
+
 	return &Logger{Logger: rawLogger}
 }
 

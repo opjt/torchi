@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"torchi/internal/domain/endpoint"
 	"torchi/internal/domain/notifications"
+	"torchi/internal/domain/sse"
 	"torchi/internal/domain/token"
 	"torchi/internal/pkg/config"
 	"torchi/internal/pkg/log"
@@ -22,6 +23,7 @@ type PushService struct {
 	tokenService    *token.TokenService
 	endpointService *endpoint.EndpointService
 	notiService     *notifications.NotiService
+	sseBroker       *sse.Broker
 
 	waitMap *WaitMap
 }
@@ -33,6 +35,7 @@ func NewPushService(
 	tokenService *token.TokenService,
 	endpointService *endpoint.EndpointService,
 	notiService *notifications.NotiService,
+	sseBroker *sse.Broker,
 ) *PushService {
 	return &PushService{
 		log:             log,
@@ -40,6 +43,7 @@ func NewPushService(
 		tokenService:    tokenService,
 		endpointService: endpointService,
 		notiService:     notiService,
+		sseBroker:       sseBroker,
 		waitMap:         NewWaitMap(), // TODO: FX로 주입
 	}
 }
@@ -112,6 +116,8 @@ func (s *PushService) Push(ctx context.Context, endpointToken string, message st
 		Body:               message,
 		NotificationEnable: endpoint.NotificationEnable,
 	})
+
+	s.publishSSE(userID, noti, endpoint.Name)
 
 	if !endpoint.NotificationEnable {
 		return 0, err
@@ -217,6 +223,8 @@ func (s *PushService) PushAndWait(ctx context.Context, endpointToken string, mes
 		return "", err
 	}
 
+	s.publishSSE(userID, noti, endpoint.Name)
+
 	if endpoint.NotificationEnable {
 		for _, token := range tokens {
 			if err := s.pushNotification(token, endpoint.Name, message); err != nil {
@@ -263,4 +271,22 @@ func (s *PushService) React(ctx context.Context, notiID uuid.UUID, reaction stri
 	}
 
 	return nil
+}
+
+func (s *PushService) publishSSE(userID uuid.UUID, noti notifications.Noti, endpointName string) {
+	s.sseBroker.Publish(userID, sse.SSEEvent{
+		Event: "notification",
+		Data: map[string]interface{}{
+			"id":            noti.ID,
+			"endpoint_name": endpointName,
+			"body":          noti.Body,
+			"is_read":       false,
+			"created_at":    noti.CreatedAt,
+			"mute":          noti.IsMute(),
+			"actions":       noti.Actions,
+			"reaction":      noti.Reaction,
+			"reaction_at":   noti.ReactionAt,
+			"status":        string(noti.Status),
+		},
+	})
 }

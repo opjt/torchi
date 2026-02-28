@@ -111,6 +111,7 @@ func (r *notiRepository) Create(ctx context.Context, noti Noti) (Noti, error) {
 		ID:         createdRow.ID,
 		EndpointID: createdRow.EndpointID,
 		Body:       createdRow.Body,
+		Actions:    createdRow.Actions,
 	}
 	return entity, err
 }
