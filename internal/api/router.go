@@ -19,6 +19,7 @@ func NewRouter(
 	apiHandler *handler.ApiHandler,
 	notiHandler *handler.NotiHandler,
 	sseHandler *handler.SSEHandler,
+	healthHandler *handler.HealthHandler,
 
 	tokenProvider *token.TokenProvider,
 	env config.Env,
@@ -32,6 +33,7 @@ func NewRouter(
 	r.Use(middle.CorsMiddleware(env.FrontUrl))
 
 	r.Route("/api", func(r chi.Router) {
+		r.Get("/health", healthHandler.Check)
 		r.With(middle.RateLimitMiddleware(limitMiddleware)).Mount("/v1", apiHandler.Routes())
 
 		r.Mount("/auth", authHandler.Routes())
@@ -57,6 +59,7 @@ var routeModule = fx.Module("router",
 		handler.NewEndpointHandler,
 		handler.NewNotiHandler,
 		handler.NewSSEHandler,
+		handler.NewHealthHandler,
 
 		// API
 		handler.NewApiHandler,
