@@ -7,6 +7,8 @@
 
 서비스 바로가기 -> [torchi.app](https://torchi.app)
 
+- [토치를 AI 에이전트와 함께](./docs/ai-agent-integration.md)
+
 ## Key Features
 
 - **PWA Based** — 별도 앱 설치 없이 웹에서 바로 푸시 구독
