@@ -3,6 +3,11 @@ name: Docker Build and Push
 on:
   push:
     branches: [ "main" ] # 메인에 푸시될 때만 작동
+    paths-ignore:
+      - '**.md'          # 모든 경로의 .md 파일 (README.md 등)
+      - '.gitignore'     # gitignore 파일
+      - 'LICENSE'        # 라이선스 파일
+      - 'docs/**'        
   workflow_dispatch:
 
 jobs:
