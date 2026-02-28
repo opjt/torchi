@@ -36,6 +36,35 @@
 	// 엔드포인트 목록
 	let endpoints = $state<Endpoint[]>([]);
 
+	function connectSSE(): EventSource {
+		const es = new EventSource('/api/sse/notifications', {
+			withCredentials: true,
+		});
+
+		es.addEventListener('notification', async (e) => {
+			const newNoti = transformNotification(JSON.parse(e.data));
+
+			// 이미 있는 알림이면 스킵 (중복 방지)
+			if (notifications.some((n) => n.id === newNoti.id)) return;
+
+			// 검색 중이거나 필터가 다르면 스킵
+			if (isSearchMode) return;
+			if (selectedServiceId !== 'ALL' && newNoti.id !== selectedServiceId) return;
+
+			notifications = [newNoti, ...notifications];
+			await tick();
+		});
+
+		es.addEventListener('connected', () => {
+			debugLog('SSE connected');
+		});
+
+		es.onerror = () => {
+			// 브라우저가 자동 재연결하므로 별도 처리 불필요
+		};
+		return es;
+	}
+
 	// 선택된 서비스의 "이름"을 찾기 위한 derived
 	let currentFilterName = $derived.by(() => {
 		if (selectedServiceId === 'ALL') return '모든 서비스';
@@ -113,6 +142,22 @@
 
 	onMount(async () => {
 		await Promise.all([loadNotifications(true), loadEndpoints()]);
+	});
+
+	$effect(() => {
+		let es: EventSource | null = null;
+
+		// SSE 연결 함수 호출
+		debugLog('SSE try to connect...');
+		es = connectSSE();
+
+		// 이 리턴 함수가 컴포넌트가 파괴될 때 호출됩니다.
+		return () => {
+			if (es) {
+				debugLog('SSE 연결 종료 (Cleanup)');
+				es.close();
+			}
+		};
 	});
 
 	function toggleFilter() {

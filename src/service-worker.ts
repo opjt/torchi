@@ -44,7 +44,8 @@ sw.addEventListener('activate', (event) => event.waitUntil(sw.clients.claim()));
 // 4. 동적 캐싱 (기존 fetch 이벤트를 Workbox 식으로 변경)
 // 직접 fetch 리스너를 짜는 것보다 Workbox 전략을 쓰는 게 훨씬 안전합니다.
 registerRoute(
-	({ request }) => request.method === 'GET',
+	({ request, url }) => request.method === 'GET' && !url.pathname.startsWith('/api/sse'), //  API SSE 요청은 워커가 가로채지 않음
+	// ({ request }) => request.method === 'GET',
 	new NetworkFirst({
 		cacheName: 'dynamic-cache',
 	}),

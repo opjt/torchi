@@ -62,7 +62,6 @@ export default defineConfig({
 			// Service Worker 설정
 			injectManifest: {
 				swDest: 'service-worker.js',
-				// globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}']
 				globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,wasm}'],
 			},
 
