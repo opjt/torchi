@@ -41,7 +41,23 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/torchi-api:${{ env.IMAGE_TAG }}
           cache-from: type=gha # GitHub Actions 캐시 사용
           cache-to: type=gha,mode=max
-      
+      # 배포 승인 요청
+      - name: Request Deployment Approval
+        id: approval
+        run: |
+          reaction=$(curl -s \
+            -X POST "https://torchi.app/api/v1/push/${{ secrets.TORCHI_TOKEN }}/ask" \
+            -d "msg=prod deploy (${{ env.IMAGE_TAG }})" \
+            -d "actions=approve,reject")
+          echo "reaction=$reaction" >> $GITHUB_OUTPUT
+
+      # 거절 or 타임아웃 시 종료
+      - name: Check Approval
+        if: steps.approval.outputs.reaction != 'approve'
+        run: |
+          echo "prod deploy cancelled"
+          exit 1
+       
       # k8s-ssot 저장소 체크아웃 
       - name: Checkout SSOT Repo
         uses: actions/checkout@v4
