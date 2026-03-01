@@ -321,14 +321,14 @@
 					<ChevronLeft size={20} />
 				</button>
 				<div
-					class="border-base-content/10 bg-base-content/5 focus-within:border-primary/40 focus-within:bg-base-100 gap-2 rounded-xl px-3 py-2 flex flex-1 items-center border transition-all duration-200"
+					class="border-base-content/10 bg-base-content/5 focus-within:border-primary/40 focus-within:bg-base-100 gap-2 rounded-xl px-3 py-2 min-w-0 flex flex-1 items-center border transition-all duration-200"
 				>
 					<Search size={13} class="shrink-0 opacity-30" />
 
 					<!-- scope chip (ALL이 아닐 때만 표시) -->
 					{#if selectedServiceId !== 'ALL'}
 						<span
-							class="bg-primary/15 text-primary rounded-md px-2 py-0.5 font-black shrink-0 text-[11px]"
+							class="bg-primary/15 text-primary rounded-md px-2 py-0.5 font-black max-w-20 shrink-0 truncate text-[11px]"
 						>
 							{currentFilterName}
 						</span>
@@ -374,7 +374,10 @@
 							class="btn h-10 gap-2 rounded-sm border-base-content/10 bg-base-100 pr-3 pl-4 shadow-xs btn-sm hover:border-primary hover:bg-base-100 flex items-center border transition-all"
 						>
 							<span class="text-xs font-bold opacity-60">Filter:</span>
-							<span class="text-xs font-black text-primary">{currentFilterName}</span>
+							<span class="text-xs font-black text-primary max-w-30 truncate"
+								>{currentFilterName}</span
+							>
+
 							<ChevronDown
 								size={14}
 								class="opacity-40 transition-transform {isFilterOpen ? 'rotate-180' : ''}"

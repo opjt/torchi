@@ -6,6 +6,17 @@ export interface Endpoint {
 	active: boolean;
 }
 
+export async function addEndpoint(name: string): Promise<Result<void>> {
+	return await catchError(
+		api<void>(`/endpoints`, {
+			method: 'POST',
+			body: {
+				serviceName: name.trim(),
+			},
+		}),
+	);
+}
+
 export async function fetchEndpoints(): Promise<Endpoint[]> {
 	const res = await api<Endpoint[]>('/endpoints');
 	return res;

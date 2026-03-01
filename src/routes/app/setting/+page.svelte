@@ -2,33 +2,24 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import {
-		fetchEndpoints,
+		addEndpoint,
 		deleteEndpoint,
 		type Endpoint,
-		unmuteEndpoint,
+		fetchEndpoints,
 		muteEndpoint,
+		unmuteEndpoint,
 	} from '$lib/api/endpoints';
+	import { auth } from '$lib/client/auth/auth';
 	import { logout } from '$lib/client/auth/lifecycle';
 	import { push } from '$lib/client/pushManager.svelte';
-	import { api } from '$lib/pkg/fetch';
-	import { auth } from '$lib/client/auth/auth';
 
-	import {
-		Bell,
-		BellOff,
-		BookOpen,
-		Braces,
-		ChevronLeft,
-		Copy,
-		Plus,
-		Trash2,
-		User,
-	} from 'lucide-svelte';
+	import { withdraw } from '$lib/api/user';
+	import * as Dialog from '$lib/components/ui/dialog/index';
+	import { showToast } from '$lib/pkg/toast';
+	import { Bell, BellOff, Braces, ChevronLeft, Copy, Plus, Trash2, User } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
-	import * as Dialog from '$lib/components/ui/dialog/index';
-	import { withdraw } from '$lib/api/user';
-	import { showToast } from '$lib/pkg/toast';
+	const MAX_NAME_LENGTH = 23;
 
 	let endpoints = $state<Endpoint[]>([]);
 
@@ -54,17 +45,11 @@
 
 	// 서비스 추가 핸들러
 	async function addService() {
-		if (!newServiceName.trim()) return;
+		if (!newServiceName.trim() || newServiceName.length > MAX_NAME_LENGTH) return;
 
-		try {
-			await api<void>(`/endpoints`, {
-				method: 'POST',
-				body: {
-					serviceName: newServiceName.trim(),
-				},
-			});
-		} catch (e) {
-			console.error(e);
+		let result = await addEndpoint(newServiceName);
+		if (!result.ok) {
+			return;
 		}
 		loading = true;
 		await getEndpoints();
@@ -292,15 +277,26 @@
 					>
 						<p class="mb-2 ml-1 text-xs font-bold">새 서비스 이름</p>
 						<div class="gap-2 flex">
-							<input
-								type="text"
-								bind:value={newServiceName}
-								placeholder="ex) 결제 서버 모니터링"
-								class="input-bordered input input-sm rounded-xl w-full focus:outline-none"
-								onkeydown={(e) => e.key === 'Enter' && addService()}
-							/>
-							<button onclick={addService} class="btn rounded-xl btn-soft btn-sm btn-primary"
-								>등록</button
+							<div class="gap-1 flex w-full flex-col">
+								<input
+									type="text"
+									bind:value={newServiceName}
+									placeholder="ex) 결제 서버 모니터링"
+									class="input-bordered input input-sm rounded-xl w-full focus:outline-none
+           {newServiceName.length >= MAX_NAME_LENGTH ? 'input-error' : ''}"
+									onkeydown={(e) => e.key === 'Enter' && addService()}
+								/>
+								<p
+									class="pr-1 text-right text-[10px]
+            {newServiceName.length >= MAX_NAME_LENGTH ? 'text-error' : 'opacity-40'}"
+								>
+									{newServiceName.length} / {MAX_NAME_LENGTH}
+								</p>
+							</div>
+							<button
+								onclick={addService}
+								disabled={!newServiceName.trim() || newServiceName.length > MAX_NAME_LENGTH}
+								class="btn rounded-xl btn-soft btn-sm btn-primary">등록</button
 							>
 						</div>
 					</div>
