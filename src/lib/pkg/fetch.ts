@@ -1,5 +1,5 @@
 import { logout } from '$lib/client/auth/lifecycle';
-import { getErrorMessage } from './error-message';
+import { getErrorMessage, type ErrorCode } from './error-message';
 import { shouldShowToast, showToast, type ToastType } from './toast';
 
 export type ApiError = {
@@ -22,8 +22,8 @@ type ApiResponse<T> = {
 	data: T;
 	message?: string;
 	error?: {
-		code: string;
-		message: string;
+		code: ErrorCode;
+		// message: string;
 	};
 };
 
@@ -74,12 +74,12 @@ export async function api<TResponse, TBody = unknown>(
 		toastType = 'error', // 토스트를 직접 컨트롤 하려면 'none' 으로 사용
 	} = options;
 	// 에러를 던지기 전에 토스트를 처리하는 내부 헬퍼
-	const handleError = (status: number, message?: string, code?: string) => {
-		showToastWrapper(toastType, getErrorMessage(code, message), code);
+	const handleError = (status: number, code?: ErrorCode) => {
+		showToastWrapper(toastType, getErrorMessage(code), code);
 
 		const error: ApiError = {
 			status,
-			message,
+
 			code,
 		};
 		throw error;
@@ -143,18 +143,18 @@ export async function api<TResponse, TBody = unknown>(
 
 		// HTTP 에러 처리 (400~500번대)
 		if (!res.ok) {
-			const { status, statusText } = res;
-			let message = statusText;
-			let code = String(status);
-
+			const { status } = res;
+			if (status === 502 || status === 503 || status === 504) {
+				return handleError(status, 'NETWORK_ERROR');
+			}
+			let code;
 			const errData: ApiResponse<never> = await res.json().catch(() => ({}));
 
 			if (errData.error) {
-				message = errData.error.message;
-				code = errData.error.code;
+				code = errData.error.code as ErrorCode;
 			}
 
-			return handleError(status, message, code);
+			return handleError(status, code);
 		}
 
 		// 204 No Content 처리
@@ -168,16 +168,12 @@ export async function api<TResponse, TBody = unknown>(
 			json = await res.json();
 		} catch (_) {
 			// 200 OK인데 JSON이 아닌 경우
-			return handleError(res.status, 'Invalid JSON response');
+			return handleError(res.status, 'DEFAULT');
 		}
 
 		//  비즈니스 로직 에러 핸들링 (success: false)
 		if (!json.success) {
-			return handleError(
-				json.code ?? res.status,
-				json.message ?? 'Unknown API Error',
-				String(json.code),
-			);
+			return handleError(json.code ?? res.status, json.error?.code as ErrorCode);
 		}
 
 		return json.data;
@@ -188,7 +184,7 @@ export async function api<TResponse, TBody = unknown>(
 		}
 		// 진짜 네트워크 에러 등 예상치 못한 에러
 		// 백엔드 서버 통신이 안되는 경우
-		return handleError(0, undefined, 'NETWORK_ERROR');
+		return handleError(0, 'NETWORK_ERROR');
 	}
 }
 

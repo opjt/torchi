@@ -18,6 +18,13 @@ export default defineConfig({
 				target: 'http://localhost:25565',
 				changeOrigin: true,
 				secure: false,
+				configure: (proxy) => {
+					proxy.on('error', (err, req, res) => {
+						const response = res as import('http').ServerResponse;
+						response.writeHead(503, { 'Content-Type': 'application/json' });
+						response.end();
+					});
+				},
 				// rewrite: (path) => path.replace(/^\/api/, ''),
 			},
 		},
