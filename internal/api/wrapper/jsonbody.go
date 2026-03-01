@@ -9,8 +9,7 @@ import (
 
 type ErrorDetail struct {
 	// common.DomainError로 대체할지 고민..
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code string `json:"code"`
 }
 type APIResponse struct {
 	Code    int          `json:"code"`
@@ -32,13 +31,11 @@ func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
 		switch v := payload.(type) {
 		case *common.DomainError:
 			resp.Error = &ErrorDetail{
-				Code:    v.Code,
-				Message: v.Message,
+				Code: v.Code,
 			}
 		case error: // 일반적인 Go 에러일 때 (예상치 못한 에러)
 			resp.Error = &ErrorDetail{
-				Code:    "INTERNAL_SERVER_ERROR",
-				Message: v.Error(),
+				Code: "INTERNAL_SERVER_ERROR",
 			}
 		default: // 성공 데이터일 때
 			resp.Data = payload
