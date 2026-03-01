@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"time"
+	"torchi/internal/domain/common"
 	"torchi/internal/pkg/token"
 )
 
@@ -48,6 +49,10 @@ func (s *EndpointService) Add(ctx context.Context, serviceName string) error {
 	userClaim, err := token.UserFromContext(ctx)
 	if err != nil {
 		return err
+	}
+
+	if len([]rune(serviceName)) > 30 {
+		return common.ErrInvalidParam
 	}
 
 	const maxRetry = 5
