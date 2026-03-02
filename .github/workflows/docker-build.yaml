@@ -7,11 +7,32 @@ on:
       - '**.md'          # 모든 경로의 .md 파일 (README.md 등)
       - '.gitignore'     # gitignore 파일
       - 'LICENSE'        # 라이선스 파일
-      - 'docs/**'        
+      - 'docs/**'
   workflow_dispatch:
 
 jobs:
+  # 배포 승인 요청
+  approve:
+    runs-on: ubuntu-latest
+    outputs:
+      reaction: ${{ steps.approval.outputs.reaction }}
+    steps:
+      - name: Set Image Tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Request Deployment Approval
+        id: approval
+        run: |
+          reaction=$(curl -s \
+            -X POST "https://torchi.app/api/v1/push/${{ secrets.TORCHI_TOKEN }}/ask" \
+            -d "msg=prod deploy (${{ env.IMAGE_TAG }})" \
+            -d "actions=approve,reject")
+          echo "reaction=$reaction" >> $GITHUB_OUTPUT
+
+  # 승인 후 빌드 및 배포
   build-and-push:
+    needs: approve
+    if: needs.approve.outputs.reaction == 'approve' # 승인 시에만 실행
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -30,7 +51,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 이미지 빌드 및 푸시 
+      # 이미지 빌드 및 푸시
       - name: Build and Push API
         uses: docker/build-push-action@v6
         with:
@@ -41,37 +62,21 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/torchi-api:${{ env.IMAGE_TAG }}
           cache-from: type=gha # GitHub Actions 캐시 사용
           cache-to: type=gha,mode=max
-      # 배포 승인 요청
-      - name: Request Deployment Approval
-        id: approval
-        run: |
-          reaction=$(curl -s \
-            -X POST "https://torchi.app/api/v1/push/${{ secrets.TORCHI_TOKEN }}/ask" \
-            -d "msg=prod deploy (${{ env.IMAGE_TAG }})" \
-            -d "actions=approve,reject")
-          echo "reaction=$reaction" >> $GITHUB_OUTPUT
 
-      # 거절 or 타임아웃 시 종료
-      - name: Check Approval
-        if: steps.approval.outputs.reaction != 'approve'
-        run: |
-          echo "prod deploy cancelled"
-          exit 1
-       
-      # k8s-ssot 저장소 체크아웃 
+      # k8s-ssot 저장소 체크아웃
       - name: Checkout SSOT Repo
         uses: actions/checkout@v4
         with:
-          repository: opjt/torchi-infra 
+          repository: opjt/torchi-infra
           token: ${{ secrets.GH_PAT }}
           path: k8s-ssot
 
       # Kustomize로 이미지 태그 수정
       - name: Update K8s Manifest
         run: |
-          cd k8s-ssot/base/api 
+          cd k8s-ssot/base/api
           kustomize edit set image opjt/torchi-api=opjt/torchi-api:${{ env.IMAGE_TAG }}
-          
+
           # Git에 반영
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
