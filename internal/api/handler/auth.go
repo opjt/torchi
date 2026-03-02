@@ -25,6 +25,8 @@ type AuthHandler struct {
 const (
 	AccessCookieKey  = "access_token"
 	RefreshCookieKey = "refresh_token"
+
+	refreshCookiePath = "/api/auth/refresh"
 )
 
 func NewAuthHandler(
@@ -48,10 +50,6 @@ func (h *AuthHandler) Routes() chi.Router {
 	r.Post("/logout", h.Logout)
 	r.Post("/refresh", h.Refresh)
 	r.Post("/guest", h.GuestLogin)
-
-	if h.env.Stage == config.StageDev {
-		r.Get("/fake/login", h.FakeLogin)
-	}
 
 	return r
 }
@@ -96,23 +94,12 @@ func (h *AuthHandler) setAuthCookies(w http.ResponseWriter, accessToken, refresh
 	http.SetCookie(w, &http.Cookie{
 		Name:     RefreshCookieKey,
 		Value:    refreshToken,
-		Path:     "/api/auth/refresh",
+		Path:     refreshCookiePath,
 		HttpOnly: true,
 		Secure:   !config.IsDev(h.env.Stage),
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   3600 * 24 * 30, // 30일
 	})
-}
-
-func (h *AuthHandler) FakeLogin(w http.ResponseWriter, r *http.Request) {
-	at, rt, err := h.service.TestLogin(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	h.setAuthCookies(w, at, rt)
-	wrapper.RespondJSON(w, http.StatusOK, nil)
 }
 
 func (h *AuthHandler) GuestLogin(w http.ResponseWriter, r *http.Request) {
@@ -161,7 +148,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) clearAuthCookies(w http.ResponseWriter) {
 	cookies := map[string]string{
 		AccessCookieKey:  "/",
-		RefreshCookieKey: "/auth/refresh",
+		RefreshCookieKey: refreshCookiePath,
 	}
 	for key, path := range cookies {
 		http.SetCookie(w, &http.Cookie{
