@@ -25,6 +25,8 @@ type AuthHandler struct {
 const (
 	AccessCookieKey  = "access_token"
 	RefreshCookieKey = "refresh_token"
+
+	refreshCookiePath = "/api/auth/refresh"
 )
 
 func NewAuthHandler(
@@ -92,7 +94,7 @@ func (h *AuthHandler) setAuthCookies(w http.ResponseWriter, accessToken, refresh
 	http.SetCookie(w, &http.Cookie{
 		Name:     RefreshCookieKey,
 		Value:    refreshToken,
-		Path:     "/api/auth/refresh",
+		Path:     refreshCookiePath,
 		HttpOnly: true,
 		Secure:   !config.IsDev(h.env.Stage),
 		SameSite: http.SameSiteLaxMode,
@@ -146,7 +148,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) clearAuthCookies(w http.ResponseWriter) {
 	cookies := map[string]string{
 		AccessCookieKey:  "/",
-		RefreshCookieKey: "/api/auth/refresh",
+		RefreshCookieKey: refreshCookiePath,
 	}
 	for key, path := range cookies {
 		http.SetCookie(w, &http.Cookie{
