@@ -1,38 +1,79 @@
-# sv
+# Torchi PWA
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Frontend application for **Torchi** — a push notification platform via HTTP API. Subscribe and manage push notifications directly from the web without installing a separate app.
 
-## Creating a project
+> torchi(Backend): [opjt/torchi](https://github.com/opjt/torchi)  
+> Live service -> [https://torchi.app](https://torchi.app)
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Tech Stack
 
-```sh
-# create a new project in the current directory
-npx sv create
+| Category     | Technology                  |
+| ------------ | --------------------------- |
+| Framework    | SvelteKit (Svelte 5)        |
+| Build        | Vite                        |
+| Styling      | Tailwind CSS 4, DaisyUI     |
+| UI Component | shadcn-svelte, Lucide Icons |
+| PWA          | vite-plugin-pwa, Workbox    |
+| Deploy       | Static Adapter (SPA)        |
 
-# create a new project in my-app
-npx sv create my-app
+## Project Structure
+
+```bash
+src/
+├── lib/
+│   ├── api/            # API call modules
+│   ├── assets/         # Static resources
+│   ├── client/         # Client-side logic
+│   │   └── auth/       # Authentication
+│   ├── components/     # Shared components
+│   │   ├── lib/        # Project components
+│   │   └── ui/         # UI components (button, card, dialog, etc.)
+│   └── pkg/            # Internal packages (utilities)
+├── routes/
+│   ├── app/
+│   │   ├── guide/      # Usage guide
+│   │   ├── services/   # Endpoint management
+│   │   ├── setting/    # Settings
+│   │   └── welcome/    # Onboarding
+│   ├── privacy/        # Privacy policy
+│   └── terms/          # Terms of service
+├── app.html            # HTML template
+├── app.css             # Global styles
+└── service-worker.ts   # Push notification service worker
 ```
 
-## Developing
+## Getting Started
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+```bash
+# Install dependencies
+pnpm install
 
-```sh
-npm run dev
+# Start dev server
+pnpm dev
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+# Production build
+pnpm build
+
+# Preview build
+pnpm preview
 ```
 
-## Building
+## Environment Variables
 
-To create a production version of your app:
+Copy `.env.sample` to `.env` and fill in the values:
 
-```sh
-npm run build
+```bash
+cp .env.sample .env
 ```
 
-You can preview the production build with `npm run preview`.
+| Variable                  | Description                       |
+| ------------------------- | --------------------------------- |
+| `PUBLIC_VAPID_KEY`        | VAPID public key for Web Push API |
+| `PUBLIC_GITHUB_CLIENT_ID` | GitHub OAuth app client ID        |
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+> VAPID key pair can be generated via the backend server (`go run . genkey`).
+> GitHub Client ID is obtained by creating a GitHub OAuth App.
+
+## License
+
+MIT License
