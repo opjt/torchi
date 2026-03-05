@@ -55,9 +55,6 @@ func (s *NotiService) Register(ctx context.Context, req ReqRegister) (noti Noti,
 		newNoti.Status = notiStatusMute
 		now := time.Now()
 		newNoti.ReadAt = &now
-	} else if s.sseBroker.HasSubscribers(req.UserID) {
-		now := time.Now()
-		newNoti.ReadAt = &now
 	}
 
 	return s.repo.Create(ctx, newNoti)
