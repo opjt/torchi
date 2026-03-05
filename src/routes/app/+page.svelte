@@ -53,6 +53,8 @@
 
 			notifications = [newNoti, ...notifications];
 			await tick();
+
+			await markAsReadUntil(newNoti.id, selectedServiceId);
 		});
 
 		es.addEventListener('connected', () => {
