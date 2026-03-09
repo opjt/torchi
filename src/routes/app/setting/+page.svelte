@@ -11,12 +11,24 @@
 	} from '$lib/api/endpoints';
 	import { auth } from '$lib/client/auth/auth';
 	import { logout } from '$lib/client/auth/lifecycle';
+	import { switchGithubAccount } from '$lib/client/auth/github-auth';
 	import { push } from '$lib/client/pushManager.svelte';
 
 	import { withdraw } from '$lib/api/user';
 	import * as Dialog from '$lib/components/ui/dialog/index';
 	import { showToast } from '$lib/pkg/toast';
-	import { Bell, BellOff, Braces, ChevronLeft, Copy, Plus, Trash2, User } from 'lucide-svelte';
+	import {
+		Bell,
+		BellOff,
+		Braces,
+		ChevronLeft,
+		Copy,
+		LogOut,
+		Plus,
+		RefreshCw,
+		Trash2,
+		User,
+	} from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
 	const MAX_NAME_LENGTH = 23;
@@ -381,15 +393,28 @@
 			</div>
 		</section>
 
-		<section class="space-y-6 pt-6">
-			<button
-				onclick={logout}
-				class="btn h-14 rounded-2xl font-bold btn-outline btn-error w-full border-2 opacity-60 transition-all hover:opacity-100"
-			>
-				로그아웃
-			</button>
+		<section class="">
+			<div class="rounded-xl border-base-content/8 flex overflow-hidden border">
+				{#if !$auth?.is_guest}
+					<button
+						onclick={switchGithubAccount}
+						class="px-5 py-3 gap-2.5 font-medium text-base-content/60 hover:text-base-content/80 hover:bg-base-content/5 flex flex-1 items-center justify-center text-[13px] transition-colors"
+					>
+						<RefreshCw size={14} strokeWidth={1.8} />
+						계정 전환
+					</button>
+					<div class="border-base-content/8 my-2.5 border-r"></div>
+				{/if}
+				<button
+					onclick={logout}
+					class="px-5 py-3 gap-2.5 font-medium text-error/60 hover:text-error/80 hover:bg-error/5 flex flex-1 items-center justify-center text-[13px] transition-colors"
+				>
+					<LogOut size={14} strokeWidth={1.8} />
+					로그아웃
+				</button>
+			</div>
 
-			<div class="space-y-2 text-center">
+			<div class="space-y-2 mt-6 text-center">
 				<div class="gap-4 text-xs flex justify-center opacity-40">
 					<a href="/terms" class="hover:opacity-70">이용약관</a>
 					<span>·</span>
@@ -410,7 +435,7 @@
 		</section>
 		<!-- 회원탈퇴 모달 -->
 		<Dialog.Root bind:open={isDeleteModalOpen}>
-			<Dialog.Content class="rounded-3xl max-w-sm mx-4 border-0">
+			<Dialog.Content class="rounded-3xl max-w-xs border-0">
 				<Dialog.Header>
 					<Dialog.Title class="text-lg font-black">정말 탈퇴하시겠어요?</Dialog.Title>
 					<Dialog.Description class="text-sm opacity-50">
