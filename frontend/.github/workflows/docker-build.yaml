@@ -1,0 +1,80 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches: ['main'] # 메인에 푸시될 때만 작동
+  workflow_dispatch:
+
+jobs:
+  # 배포 승인 요청
+  approve:
+    runs-on: ubuntu-latest
+    outputs:
+      reaction: ${{ steps.approval.outputs.reaction }}
+    steps:
+      - name: Set Image Tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Request Deployment Approval
+        id: approval
+        run: |
+          reaction=$(curl -s \
+            -X POST "https://torchi.app/api/v1/push/${{ secrets.TORCHI_TOKEN }}/ask" \
+            -d "msg=prod frontend (${{ env.IMAGE_TAG }})" \
+            -d "actions=approve,reject")
+          echo "reaction=$reaction" >> $GITHUB_OUTPUT
+
+  # 승인 후 빌드 및 배포
+  build-and-push:
+    needs: approve
+    if: needs.approve.outputs.reaction == 'approve' # 승인 시에만 실행
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Image Tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 도커 허브 로그인
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 이미지 빌드 및 푸시
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/torchi-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/torchi-frontend:${{ env.IMAGE_TAG }}
+          cache-from: type=gha # GitHub Actions 캐시 사용
+          cache-to: type=gha,mode=max
+
+      # k8s-ssot 저장소 체크아웃
+      - name: Checkout SSOT Repo
+        uses: actions/checkout@v4
+        with:
+          repository: opjt/torchi-infra
+          token: ${{ secrets.GH_PAT }}
+          path: k8s-ssot
+
+      # Kustomize로 이미지 태그 수정
+      - name: Update K8s Manifest
+        run: |
+          cd k8s-ssot/base/frontend
+          kustomize edit set image opjt/torchi-frontend=opjt/torchi-frontend:${{ env.IMAGE_TAG }}
+
+          # Git에 반영
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "deploy: update frontend image to ${{ env.IMAGE_TAG }}"
+          git push

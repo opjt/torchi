@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512">
+  <defs>
+    <linearGradient id="minimalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF7F45"/>
+      <stop offset="100%" stop-color="#FF6B35"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(0, 3)">
+    <!-- 상단 바 -->
+    <rect x="23.7" y="15" width="52.6" height="24" rx="6" fill="url(#minimalGrad)"/>
+    <!-- 하단 다이아몬드 -->
+    <rect x="32" y="41" width="36" height="36" rx="5" fill="url(#minimalGrad)" transform="rotate(45 50 59)"/>
+  </g>
+</svg>
