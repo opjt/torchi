@@ -4,3 +4,5 @@ bin/
 
 .env/
 !.env/.env.sample
+
+.vscode/
