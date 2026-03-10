@@ -32,6 +32,12 @@ func NewRouter(
 	r.Use(middleware.Recoverer)
 	r.Use(middle.CorsMiddleware(env.FrontUrl))
 
+	// 정적 파일 서빙 (standalone 빌드 시에만 활성화)
+	if h := staticHandler(); h != nil {
+		r.Get("/env.js", envJsHandler(env))
+		r.Handle("/*", h)
+	}
+
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/health", healthHandler.Check)
 		r.With(middle.RateLimitMiddleware(limitMiddleware)).Mount("/v1", apiHandler.Routes())
