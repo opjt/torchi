@@ -1,0 +1,120 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* @custom-variant dark (&:is(.dark *)); */
+
+@plugin 'daisyui' {
+	/* themes: sunset --prefersdark; */
+}
+@plugin 'daisyui/theme' {
+	name: 'tochi-light';
+	default: true;
+	prefersdark: false;
+	color-scheme: 'light';
+
+	/* 배경: 완전한 흰색과 아주 옅은 회색으로 깔끔하게 */
+	--color-base-100: oklch(100% 0 0); /* 메인 배경 (흰색) */
+	--color-base-200: oklch(98% 0 0); /* 카드/구분선 배경 (아주 연한 회색) */
+	--color-base-300: oklch(95% 0 0); /* 짙은 배경 (연한 회색) */
+	--color-base-content: oklch(20% 0.02 32); /* 본문 텍스트 (완전 검정 대신 진한 웜그레이) */
+
+	/* 메인 컬러: 당근마켓의 시그니처 주황색 */
+	--color-primary: oklch(
+		68% 0.22 40
+	); /* 당근당근 #ff5600
+	--color-primary-content: oklch(100% 0 0); /* 주황색 위 흰색 글씨 */
+
+	/* 보조 컬러: 신뢰감을 주는 짙은 색이나 부드러운 톤 */
+	--color-secondary: oklch(85% 0.1 85); /* 연한 살구색/노란빛 (강조용 배경) */
+	--color-secondary-content: oklch(30% 0.05 40); /* 보조 컬러 위 텍스트 */
+
+	/* 포인트: 검정색 강조 */
+	--color-accent: oklch(25% 0 0); /* 진한 먹색 (강조 버튼 등) */
+	--color-accent-content: oklch(100% 0 0);
+
+	/* 중립 컬러: 비활성화 버튼이나 보조 텍스트 */
+	--color-neutral: oklch(32% 0.02 270);
+	--color-neutral-content: oklch(98% 0 0);
+
+	--color-info: oklch(74% 0.14 240); /* 부드러운 파랑 */
+	--color-info-content: oklch(100% 0 0);
+	--color-success: oklch(70% 0.16 150); /* 부드러운 초록 */
+	--color-success-content: oklch(100% 0 0);
+	--color-warning: oklch(85% 0.16 80); /* 부드러운 노랑/주황 */
+	--color-warning-content: oklch(30% 0.05 40);
+	--color-error: oklch(65% 0.2 25); /* 부드러운 빨강 */
+	--color-error-content: oklch(100% 0 0);
+}
+
+@plugin 'daisyui/theme' {
+	name: 'torchi-dark';
+	default: false;
+	prefersdark: true;
+	color-scheme: 'dark';
+	--color-base-100: oklch(22% 0.019 237.69);
+	--color-base-200: oklch(20% 0.019 237.69);
+	--color-base-300: oklch(18% 0.019 237.69);
+	--color-base-content: oklch(77.383% 0.043 245.096);
+	--color-primary: oklch(68% 0.22 40); /* 당근 주황색 (#FF6F0F 계열) */
+	--color-primary-content: oklch(100% 0 0); /* 주황색 위 흰색 글씨 */
+	--color-secondary: oklch(72.537% 0.177 2.72);
+	--color-secondary-content: oklch(14.507% 0.035 2.72);
+	--color-accent: oklch(71.294% 0.166 299.844);
+	--color-accent-content: oklch(14.258% 0.033 299.844);
+	--color-neutral: oklch(26% 0.019 237.69);
+	--color-neutral-content: oklch(87% 0.006 286.286);
+	--color-info: oklch(74% 0.16 232.661);
+	--color-info-content: oklch(29% 0.066 243.157);
+	--color-success: oklch(76% 0.177 163.223);
+	--color-success-content: oklch(37% 0.077 168.94);
+	--color-warning: oklch(82% 0.189 84.429);
+	--color-warning-content: oklch(41% 0.112 45.904);
+	--color-error: oklch(71% 0.194 13.428);
+	--color-error-content: oklch(27% 0.105 12.094);
+}
+:root {
+	--radius-selector: 0.5rem;
+	--radius-field: 0.5rem;
+	--radius-box: 1rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
+	--border: 1px;
+	--depth: 0;
+	--noise: 0;
+	--radius: 0.625rem;
+}
+
+[data-sonner-toast] {
+	--normal-text: var(--color-base-200) !important;
+	--normal-bg: var(--color-base-content) !important;
+	--normal-border: transparent !important;
+
+	box-shadow: none !important;
+	--front-toast-shadow: none !important;
+	--stacked-toast-shadow: none !important;
+}
+[data-sonner-toast][data-styled='true'] [data-description] {
+	color: var(--color-base-300) !important;
+}
+
+@theme inline {
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+	--radius-2xl: calc(var(--radius) + 8px);
+	--radius-3xl: calc(var(--radius) + 12px);
+	--radius-4xl: calc(var(--radius) + 16px);
+	/* shadcn → daisyUI 변수 브릿지 */
+	--color-background: var(--color-base-100);
+	--color-foreground: var(--color-base-content);
+	--color-card: var(--color-base-100);
+	--color-card-foreground: var(--color-base-content);
+	--color-popover: var(--color-base-100);
+	--color-popover-foreground: var(--color-base-content);
+	--color-muted: var(--color-base-200);
+	--color-muted-foreground: var(--color-base-content);
+	--color-border: var(--color-base-300);
+	--color-input: var(--color-base-200);
+	--color-ring: var(--color-primary);
+}

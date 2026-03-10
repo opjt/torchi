@@ -1,0 +1,36 @@
+services:
+  torchi:
+    build:
+      context: .
+      dockerfile: Dockerfile.standalone
+    container_name: torchi-standalone
+    restart: unless-stopped
+    ports:
+      - "8282:8282"
+    environment:
+      STAGE: dev
+      SERVICE_PORT: 8282
+      DB_URL: postgres://torchi:torchi@postgres:5432/torchi?sslmode=disable
+      JWT_SECRET: dev-secret
+      FRONT_URL: http://localhost:8282
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:18
+    container_name: torchi-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: torchi
+      POSTGRES_PASSWORD: torchi
+      POSTGRES_DB: torchi
+    volumes:
+      - vpgdata:/var/lib/postgresql
+      - ./db/schema:/docker-entrypoint-initdb.d
+
+volumes:
+  vpgdata:

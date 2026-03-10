@@ -1,0 +1,38 @@
+# 1. Frontend build
+FROM node:22-alpine AS frontend
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+COPY frontend/ .
+RUN pnpm run build
+
+# 2. Backend build
+FROM golang:1.25-alpine AS backend
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+COPY --from=frontend /app/build ./internal/api/static
+# TODO: cross build
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=arm64 \ 
+    go build -tags standalone -ldflags="-s -w" -o torchi
+
+# 3. Runtime
+FROM gcr.io/distroless/static-debian12
+
+WORKDIR /app
+COPY --from=backend /app/torchi .
+
+USER nonroot:nonroot
+ENTRYPOINT ["/app/torchi", "serve"]
