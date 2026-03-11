@@ -82,6 +82,7 @@ func (h *NotiHandler) Read(ctx context.Context, req reqReadNoti) (interface{}, e
 
 type resNoti struct {
 	ID           uuid.UUID  `json:"id"` // 클라이언트가 커서로 쓸 ID
+	EndpointID   *uuid.UUID `json:"endpoint_id"`
 	EndpointName string     `json:"endpoint_name"`
 	Body         string     `json:"body"`
 	IsRead       bool       `json:"is_read"`
@@ -148,6 +149,7 @@ func (h *NotiHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	for i, noti := range notis {
 		items[i] = resNoti{
 			ID:           noti.ID,
+			EndpointID:   noti.EndpointID,
 			EndpointName: noti.EndpointName,
 			Body:         noti.Body,
 			IsRead:       bool(noti.ReadAt != nil),

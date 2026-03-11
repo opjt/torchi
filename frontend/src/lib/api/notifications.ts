@@ -10,8 +10,9 @@ export type NotificationStatus =
 
 // 백엔드 응답 구조와 일치
 export interface NotificationApiResponse {
-	id: string; // 실제 DB UUID
+	id: string; // notification UUID
 	endpoint_name: string;
+	endpoint_id: string | null;
 	body: string;
 	is_read: boolean;
 	created_at: string;
@@ -30,6 +31,7 @@ export interface PaginatedNotiResponse {
 export interface DisplayNotification {
 	id: string;
 	endpointName: string;
+	endpointId: string | null;
 	body: string;
 	isRead: boolean;
 	timestamp: string;
@@ -58,6 +60,7 @@ export function transformNotification(apiData: NotificationApiResponse): Display
 	return {
 		id: apiData.id,
 		endpointName: apiData.endpoint_name,
+		endpointId: apiData.endpoint_id,
 		body: apiData.body,
 		isRead: apiData.is_read,
 		timestamp: formatTimestamp(apiData.created_at),

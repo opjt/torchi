@@ -279,6 +279,7 @@ func (s *PushService) publishSSE(userID uuid.UUID, noti notifications.Noti, endp
 		Data: map[string]interface{}{
 			"id":            noti.ID,
 			"endpoint_name": endpointName,
+			"endpoint_id":   noti.EndpointID,
 			"body":          noti.Body,
 			"is_read":       false,
 			"created_at":    noti.CreatedAt,

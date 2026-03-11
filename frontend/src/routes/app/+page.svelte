@@ -49,7 +49,7 @@
 
 			// 검색 중이거나 필터가 다르면 스킵
 			if (isSearchMode) return;
-			if (selectedServiceId !== 'ALL' && newNoti.id !== selectedServiceId) return;
+			if (selectedServiceId !== 'ALL' && newNoti.endpointId !== selectedServiceId) return;
 
 			notifications = [newNoti, ...notifications];
 			await tick();
