@@ -49,7 +49,7 @@
 
 			// 검색 중이거나 필터가 다르면 스킵
 			if (isSearchMode) return;
-			if (selectedServiceId !== 'ALL' && newNoti.id !== selectedServiceId) return;
+			if (selectedServiceId !== 'ALL' && newNoti.endpointId !== selectedServiceId) return;
 
 			notifications = [newNoti, ...notifications];
 			await tick();
@@ -402,7 +402,9 @@
 										<span class="h-1.5 w-1.5 bg-primary rounded-full"></span>
 									{/if}
 								</button>
-								<div class="mx-2 my-1 bg-white/5 h-px"></div>
+								{#if endpoints.length > 0}
+									<div class="mx-2 my-1 bg-base-content/10 h-px"></div>
+								{/if}
 								{#each endpoints as enp}
 									<button
 										onclick={() => selectFilter(enp.id)}
