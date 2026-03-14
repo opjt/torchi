@@ -62,6 +62,11 @@
 			notifications = notifications.map((n) => (n.id === id ? { ...n, isCancelled: true } : n));
 		});
 
+		es.addEventListener('expired', (e) => {
+			const { id } = JSON.parse(e.data);
+			notifications = notifications.map((n) => (n.id === id ? { ...n, isExpired: true } : n));
+		});
+
 		es.addEventListener('connected', () => {
 			debugLog('SSE connected');
 		});

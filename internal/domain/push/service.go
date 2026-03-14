@@ -257,8 +257,12 @@ func (s *PushService) PushAndWait(ctx context.Context, endpointToken string, mes
 				s.log.Error("update status timeout", "err", err)
 			}
 		}
+		event := "expired"
+		if cancelled {
+			event = "cancelled"
+		}
 		s.sseBroker.Publish(userID, sse.SSEEvent{
-			Event: "cancelled",
+			Event: event,
 			Data:  map[string]any{"id": noti.ID},
 		})
 	}()
