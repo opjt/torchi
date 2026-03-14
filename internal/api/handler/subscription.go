@@ -28,8 +28,8 @@ func NewSubscriptionHandler(
 // /subscriptions
 func (h *SubscriptionHandler) Routes() chi.Router {
 	r := chi.NewRouter()
-	r.Post("/", wrapper.WrapJson(h.Subscribe, h.log.Error, wrapper.RespondJSON))
-	r.Post("/unsubscribe", wrapper.WrapJson(h.Unsubscribe, h.log.Error, wrapper.RespondJSON))
+	r.Post("/", wrapper.WrapJson(h.Subscribe, h.log.Error))
+	r.Post("/unsubscribe", wrapper.WrapJson(h.Unsubscribe, h.log.Error))
 	return r
 }
 

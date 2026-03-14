@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 	"torchi/internal/api/wrapper"
+	"torchi/internal/domain/common"
 	"torchi/internal/domain/notifications"
 	"torchi/internal/pkg/config"
 	"torchi/internal/pkg/log"
@@ -34,8 +35,8 @@ func NewNotiHandler(
 func (h *NotiHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", h.GetList)
-	r.Post("/read-until", wrapper.WrapJson(h.Read, h.log.Error, wrapper.RespondJSON))
-	r.Delete("/{id}", wrapper.WrapJson(h.Delete, h.log.Error, wrapper.RespondJSON))
+	r.Post("/read-until", wrapper.WrapJson(h.Read, h.log.Error))
+	r.Delete("/{id}", wrapper.WrapJson(h.Delete, h.log.Error))
 
 	return r
 }
@@ -105,7 +106,7 @@ func (h *NotiHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userClaim, err := token.UserFromContext(ctx)
 	if err != nil {
-		wrapper.RespondJSON(w, http.StatusUnauthorized, err)
+		wrapper.RespondError(w, common.ErrUnauthorized)
 		return
 	}
 
@@ -140,7 +141,7 @@ func (h *NotiHandler) GetList(w http.ResponseWriter, r *http.Request) {
 
 	notis, err := h.service.GetListWithCursor(ctx, userClaim.UserID, lastID, int32(limit), endpointID, query)
 	if err != nil {
-		wrapper.RespondJSON(w, http.StatusInternalServerError, err)
+		wrapper.RespondError(w, err)
 		return
 	}
 

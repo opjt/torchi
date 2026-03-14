@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 	"torchi/internal/api/wrapper"
+	"torchi/internal/domain/common"
 	"torchi/internal/domain/push"
 	"torchi/internal/pkg/config"
 	"torchi/internal/pkg/log"
@@ -44,9 +45,9 @@ func (h *ApiHandler) Routes() chi.Router {
 	r.Post("/push/{token}", h.Push)
 	r.Post("/demo", h.Demo)
 	r.Post("/push/{token}/ask", h.Ask)
-	r.Post("/react/{notiID}", wrapper.WrapJson(h.React, h.log.Error, wrapper.RespondJSON))
-	r.Post("/push-test", wrapper.WrapJson(h.TestPush, h.log.Error, wrapper.RespondJSON))
-	r.Post("/push-demo", wrapper.WrapJson(h.DemoPush, h.log.Error, wrapper.RespondJSON))
+	r.Post("/react/{notiID}", wrapper.WrapJson(h.React, h.log.Error))
+	r.Post("/push-test", wrapper.WrapJson(h.TestPush, h.log.Error))
+	r.Post("/push-demo", wrapper.WrapJson(h.DemoPush, h.log.Error))
 
 	return r
 }
@@ -112,20 +113,20 @@ func (h *ApiHandler) Push(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Failed to read body", http.StatusInternalServerError)
+		wrapper.RespondError(w, common.ErrInternalServer)
 		return
 	}
 	defer r.Body.Close()
 
 	message := string(bodyBytes)
 	if message == "" {
-		http.Error(w, "Message body is empty", http.StatusBadRequest)
+		wrapper.RespondError(w, common.ErrBadRequest)
 		return
 	}
 
 	count, err := h.service.Push(ctx, token, message)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		wrapper.RespondError(w, err)
 		return
 	}
 
@@ -138,7 +139,7 @@ func (h *ApiHandler) Ask(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParamFromCtx(ctx, "token")
 
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		wrapper.RespondError(w, common.ErrBadRequest)
 		return
 	}
 
@@ -172,7 +173,7 @@ func (h *ApiHandler) Ask(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		wrapper.RespondError(w, err)
 		return
 	}
 

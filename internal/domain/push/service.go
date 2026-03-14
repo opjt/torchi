@@ -3,8 +3,8 @@ package push
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"torchi/internal/domain/common"
 	"torchi/internal/domain/endpoint"
 	"torchi/internal/domain/notifications"
 	"torchi/internal/domain/sse"
@@ -81,7 +81,7 @@ func (s *PushService) PushByEndpoint(ctx context.Context, endpoint string, messa
 		return err
 	}
 	if token == nil {
-		return errors.New("endpoint not found")
+		return common.ErrEndpointNotFound
 	}
 
 	if err := s.pushNotification(*token, "TEST!", message); err != nil {
@@ -101,7 +101,7 @@ func (s *PushService) Push(ctx context.Context, endpointToken string, message st
 		return 0, err
 	}
 	if endpoint == nil {
-		return 0, nil
+		return 0, common.ErrEndpointNotFound
 	}
 	userID := endpoint.UserID
 
@@ -202,7 +202,7 @@ func (s *PushService) PushAndWait(ctx context.Context, endpointToken string, mes
 		return "", err
 	}
 	if endpoint == nil {
-		return "", errors.New("endpoint not found")
+		return "", common.ErrEndpointNotFound
 	}
 
 	userID := endpoint.UserID

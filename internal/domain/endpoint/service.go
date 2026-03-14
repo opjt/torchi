@@ -2,7 +2,6 @@ package endpoint
 
 import (
 	"context"
-	"errors"
 	"time"
 	"torchi/internal/domain/common"
 	"torchi/internal/pkg/token"
@@ -79,7 +78,7 @@ func (s *EndpointService) Add(ctx context.Context, serviceName string) error {
 
 	}
 
-	return errors.New("endpoint generate fail")
+	return common.ErrInternalServer
 }
 
 func (s *EndpointService) Remove(ctx context.Context, endpointToken string) error {
