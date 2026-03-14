@@ -21,6 +21,7 @@ const (
 	notiStatusFailed       notiStatus = "failed"        // push 전송 실패
 	notiStatusMute         notiStatus = "mute"          // endpoint의 알림 끈 경우
 	notiStatusTimeoutReply notiStatus = "timeout_reply" // 리액션 타임아웃 경우
+	notiStatusCancelled    notiStatus = "cancelled"     // 요청자가 취소한 경우
 )
 
 type Noti struct {
