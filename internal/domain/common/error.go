@@ -20,10 +20,11 @@ func NewError(status int, code string) *DomainError {
 
 // 프론트와 한 약속.
 var (
-	ErrBadRequest   = NewError(400, "BAD_REQUEST")
-	ErrUnauthorized = NewError(401, "UNAUTHORIZED")
-	ErrInvalidParam = NewError(400, "INVALID_PARAMETER")
+	ErrBadRequest     = NewError(400, "BAD_REQUEST")
+	ErrUnauthorized   = NewError(401, "UNAUTHORIZED")
+	ErrInvalidParam   = NewError(400, "INVALID_PARAMETER")
+	ErrInternalServer = NewError(500, "INTERNAL_SERVER_ERROR")
 
 	ErrUserNotFound     = NewError(404, "USER_NOT_FOUND")
-	ErrPushTokenExpired = NewError(400, "PUSH_TOKEN_EXPIRED")
+	ErrEndpointNotFound = NewError(404, "ENDPOINT_NOT_FOUND")
 )

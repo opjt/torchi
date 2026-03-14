@@ -24,11 +24,11 @@ func NewEndpointHandler(log *log.Logger, service *endpoint.EndpointService) *End
 }
 func (h *EndpointHandler) Routes() chi.Router {
 	r := chi.NewRouter()
-	r.Post("/", wrapper.WrapJson(h.Add, h.log.Error, wrapper.RespondJSON))
+	r.Post("/", wrapper.WrapJson(h.Add, h.log.Error))
 	r.Get("/", h.GetList)
-	r.Delete("/{token}", wrapper.WrapJson(h.Delete, h.log.Error, wrapper.RespondJSON))
-	r.Post("/{token}/mute", wrapper.WrapJson(h.Mute, h.log.Error, wrapper.RespondJSON))
-	r.Delete("/{token}/mute", wrapper.WrapJson(h.Unmute, h.log.Error, wrapper.RespondJSON))
+	r.Delete("/{token}", wrapper.WrapJson(h.Delete, h.log.Error))
+	r.Post("/{token}/mute", wrapper.WrapJson(h.Mute, h.log.Error))
+	r.Delete("/{token}/mute", wrapper.WrapJson(h.Unmute, h.log.Error))
 	return r
 }
 
@@ -57,7 +57,7 @@ func (h *EndpointHandler) GetList(w http.ResponseWriter, r *http.Request) {
 
 	endpoints, err := h.service.List(r.Context())
 	if err != nil {
-		wrapper.RespondJSON(w, http.StatusInternalServerError, err)
+		wrapper.RespondError(w, err)
 		return
 	}
 

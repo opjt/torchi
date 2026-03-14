@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"torchi/internal/api/wrapper"
+	"torchi/internal/domain/common"
 	"torchi/internal/domain/user"
 	"torchi/internal/pkg/config"
 	"torchi/internal/pkg/log"
@@ -29,8 +30,8 @@ func NewUserHandler(log *log.Logger, env config.Env, service *user.UserService) 
 func (h *UserHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/whoami", h.Whoami)
-	r.Post("/terms-agree", wrapper.WrapJson(h.TermsAgree, h.log.Error, wrapper.RespondJSON))
-	r.Delete("/", wrapper.WrapJson(h.Withdraw, h.log.Error, wrapper.RespondJSON))
+	r.Post("/terms-agree", wrapper.WrapJson(h.TermsAgree, h.log.Error))
+	r.Delete("/", wrapper.WrapJson(h.Withdraw, h.log.Error))
 	return r
 }
 
@@ -74,17 +75,17 @@ func (h *UserHandler) Whoami(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userClaim, err := token.UserFromContext(ctx)
 	if err != nil {
-		wrapper.RespondJSON(w, http.StatusInternalServerError, err)
+		wrapper.RespondError(w, common.ErrUnauthorized)
 		return
 	}
 
 	user, err := h.service.FindByEmail(ctx, userClaim.UserID)
 	if err != nil {
-		wrapper.RespondJSON(w, http.StatusInternalServerError, err)
+		wrapper.RespondError(w, err)
 		return
 	}
 	if user == nil {
-		wrapper.RespondJSON(w, http.StatusInternalServerError, "user not found")
+		wrapper.RespondError(w, common.ErrUserNotFound)
 		return
 	}
 	h.log.Debug("...", "user", user)

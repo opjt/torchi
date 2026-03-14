@@ -59,7 +59,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(RefreshCookieKey)
 	if err != nil {
 		h.log.Error("refresh cookie missing", "error", err)
-		http.Error(w, "Refresh token missing", http.StatusUnauthorized)
+		wrapper.RespondError(w, common.ErrUnauthorized)
 		return
 	}
 
@@ -68,7 +68,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.log.Error("failed to refresh token", "error", err)
 		// 토큰이 만료되었거나 변조된 경우 401을 내려주어 프론트에서 재로그인 유도
-		http.Error(w, "Invalid refresh token", http.StatusUnauthorized)
+		wrapper.RespondError(w, common.ErrUnauthorized)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (h *AuthHandler) GuestLogin(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.log.Error("failed to decode request body", "error", err)
-		wrapper.RespondJSON(w, http.StatusBadRequest, err)
+		wrapper.RespondError(w, common.ErrBadRequest)
 		return
 	}
 
@@ -117,7 +117,7 @@ func (h *AuthHandler) GuestLogin(w http.ResponseWriter, r *http.Request) {
 	if req.UserID != nil {
 		id, err := uuid.Parse(*req.UserID)
 		if err != nil {
-			wrapper.RespondJSON(w, http.StatusBadRequest, common.ErrBadRequest)
+			wrapper.RespondError(w, common.ErrBadRequest)
 			return
 		}
 		userID = &id
@@ -125,7 +125,7 @@ func (h *AuthHandler) GuestLogin(w http.ResponseWriter, r *http.Request) {
 
 	loginResult, err := h.service.GuestLogin(r.Context(), userID)
 	if err != nil {
-		wrapper.RespondJSON(w, http.StatusInternalServerError, err)
+		wrapper.RespondError(w, err)
 		return
 	}
 
@@ -187,7 +187,7 @@ func (h *AuthHandler) OauthGithubCallback(w http.ResponseWriter, r *http.Request
 	at, rt, err := h.service.OauthGithubFlow(r.Context(), code)
 	if err != nil {
 		h.log.Error("failed to get user profile", "error", err)
-		http.Error(w, "Failed to get user profile", http.StatusInternalServerError)
+		wrapper.RespondError(w, common.ErrInternalServer)
 		return
 	}
 
