@@ -70,14 +70,16 @@
 	}
 
 	// 서비스 삭제 핸들러
-	async function deleteService(id: string) {
-		if (!confirm('정말 이 엔드포인트를 삭제하시겠습니까?')) return;
+	async function confirmDeleteEndpoint() {
+		if (!endpointToDelete) return;
+		isDeletingEndpoint = true;
 		try {
-			await deleteEndpoint(id);
+			await deleteEndpoint(endpointToDelete.token);
 		} catch (e) {
 			console.error(e);
 		}
-
+		isDeletingEndpoint = false;
+		endpointToDelete = null;
 		await getEndpoints();
 	}
 
@@ -126,6 +128,9 @@
 	async function testPush() {
 		await push.testNotification();
 	}
+	let endpointToDelete = $state<{ token: string; name: string } | null>(null);
+	let isDeletingEndpoint = $state(false);
+
 	let isDeleteModalOpen = $state(false); // 탈퇴 모달 트리거
 	let deleteConfirmText = $state(''); // confirm용 input bind
 	let isDeleting = $state(false);
@@ -352,7 +357,8 @@
 									{/if}
 								</button>
 								<button
-									onclick={() => deleteService(endpoint.token)}
+									onclick={() =>
+										(endpointToDelete = { token: endpoint.token, name: endpoint.name })}
 									class="btn btn-square text-error/50 btn-ghost btn-xs hover:bg-error/10 hover:text-error"
 									title="Delete"
 								>
@@ -433,6 +439,40 @@
 				<p class="font-mono text-[10px] opacity-30">v{__APP_VERSION__}</p>
 			</div>
 		</section>
+		<!-- 엔드포인트 삭제 확인 모달 -->
+		<Dialog.Root
+			open={endpointToDelete !== null}
+			onOpenChange={(open) => {
+				if (!open) endpointToDelete = null;
+			}}
+		>
+			<Dialog.Content class="rounded-3xl max-w-xs border-0">
+				<Dialog.Header>
+					<Dialog.Title class="text-lg font-black">엔드포인트 삭제</Dialog.Title>
+					<Dialog.Description class="text-sm opacity-60">
+						<span class="font-bold text-base-content">{endpointToDelete?.name}</span>을(를)
+						삭제하시겠습니까?<br />삭제 후 복구할 수 없습니다.
+					</Dialog.Description>
+				</Dialog.Header>
+				<Dialog.Footer class="gap-2 mt-4 flex-row">
+					<Dialog.Close class="btn rounded-xl flex-1" disabled={isDeletingEndpoint}
+						>취소</Dialog.Close
+					>
+					<button
+						onclick={confirmDeleteEndpoint}
+						disabled={isDeletingEndpoint}
+						class="btn btn-error rounded-xl flex-1"
+					>
+						{#if isDeletingEndpoint}
+							<span class="loading loading-spinner loading-xs"></span>
+						{:else}
+							삭제
+						{/if}
+					</button>
+				</Dialog.Footer>
+			</Dialog.Content>
+		</Dialog.Root>
+
 		<!-- 회원탈퇴 모달 -->
 		<Dialog.Root bind:open={isDeleteModalOpen}>
 			<Dialog.Content class="rounded-3xl max-w-xs border-0">
