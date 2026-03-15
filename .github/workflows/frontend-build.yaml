@@ -65,7 +65,7 @@ jobs:
 
       - name: Update K8s Manifest
         run: |
-          cd k8s-ssot/base/frontend
+          cd k8s-ssot/manifests/app
           kustomize edit set image opjt/torchi-frontend=opjt/torchi-frontend:${{ env.IMAGE_TAG }}
 
           git config --global user.name "github-actions[bot]"
