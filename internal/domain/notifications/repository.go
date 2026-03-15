@@ -126,7 +126,7 @@ func (r *notiRepository) UpdateStatus(ctx context.Context, noti Noti) error {
 }
 
 func (r *notiRepository) SaveReaction(ctx context.Context, notiID uuid.UUID, reaction string) error {
-	return r.queries.SaveReaction(ctx, db.SaveReactionParams{
+	return r.queries.SaveReactionIfActive(ctx, db.SaveReactionIfActiveParams{
 		ID:       notiID,
 		Reaction: &reaction,
 	})

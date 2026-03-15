@@ -3,6 +3,7 @@ package push
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"torchi/internal/domain/common"
 	"torchi/internal/domain/endpoint"
@@ -240,15 +241,30 @@ func (s *PushService) PushAndWait(ctx context.Context, endpointToken string, mes
 	ch := make(chan string, 1)
 	s.waitMap.Set(noti.ID.String(), ch)
 	reacted := false
+	cancelled := false
 
 	defer func() {
 		s.waitMap.Delete(noti.ID.String())
 		if reacted {
 			return
 		}
-		if err := s.notiService.UpdateStatusTimeout(context.Background(), noti.ID); err != nil {
-			s.log.Error("update status timeout", "err", err)
+		if cancelled {
+			if err := s.notiService.UpdateStatusCancelled(context.Background(), noti.ID); err != nil {
+				s.log.Error("update status cancelled", "err", err)
+			}
+		} else {
+			if err := s.notiService.UpdateStatusTimeout(context.Background(), noti.ID); err != nil {
+				s.log.Error("update status timeout", "err", err)
+			}
 		}
+		event := "expired"
+		if cancelled {
+			event = "cancelled"
+		}
+		s.sseBroker.Publish(userID, sse.SSEEvent{
+			Event: event,
+			Data:  map[string]any{"id": noti.ID},
+		})
 	}()
 
 	select {
@@ -256,6 +272,11 @@ func (s *PushService) PushAndWait(ctx context.Context, endpointToken string, mes
 		reacted = true
 		return reaction, nil
 	case <-ctx.Done():
+		if errors.Is(ctx.Err(), context.Canceled) {
+			cancelled = true
+			s.log.Debug("PushAndWait cancelled by caller")
+			return "", context.Canceled
+		}
 		s.log.Debug("PushAndWait timeout")
 		return "", context.DeadlineExceeded
 	}

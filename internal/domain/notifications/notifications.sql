@@ -26,14 +26,13 @@ SET reaction = $2,
     reaction_at = now()
 WHERE id = $1;
 
--- name: SaveReactionIfNotExpired :one
+-- name: SaveReactionIfActive :exec
 UPDATE notifications
 SET reaction = $2,
     reaction_at = now(),
     status = 'reacted'
 WHERE id = $1
-  AND status != 'expired'
-RETURNING status;
+  AND status NOT IN ('timeout_reply', 'cancelled');
 
 -- name: UpdateStatusNotification :exec
 UPDATE notifications

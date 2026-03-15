@@ -11,7 +11,7 @@
 	} from '$lib/api/notifications';
 	import { auth } from '$lib/client/auth/auth';
 	import { debugLog, linkify } from '$lib/pkg/util';
-	import { BellOff, ChevronDown, ChevronLeft, Search, Settings, X } from 'lucide-svelte';
+	import { BellOff, ChevronDown, ChevronLeft, Clock, Search, Settings, X } from 'lucide-svelte';
 	import { onMount, tick } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
@@ -55,6 +55,16 @@
 			await tick();
 
 			await markAsReadUntil(newNoti.id, selectedServiceId);
+		});
+
+		es.addEventListener('cancelled', (e) => {
+			const { id } = JSON.parse(e.data);
+			notifications = notifications.map((n) => (n.id === id ? { ...n, isCancelled: true } : n));
+		});
+
+		es.addEventListener('expired', (e) => {
+			const { id } = JSON.parse(e.data);
+			notifications = notifications.map((n) => (n.id === id ? { ...n, isExpired: true } : n));
 		});
 
 		es.addEventListener('connected', () => {
@@ -488,8 +498,10 @@
 									<span class="text-xs font-bold font-mono opacity-40">
 										✓ {noti.reaction}
 									</span>
+								{:else if noti.isCancelled}
+									<span class="text-xs font-bold font-mono opacity-30"> 취소됨 </span>
 								{:else if noti.isExpired}
-									<span class="text-xs font-bold font-mono opacity-30"> ⏱ 시간 초과 </span>
+									<span class="text-xs font-bold font-mono opacity-30 gap-1 flex items-center"><Clock size={12} /> 시간 초과</span>
 								{:else}
 									{#each noti.actions as action, i}
 										<button

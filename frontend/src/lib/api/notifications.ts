@@ -6,6 +6,7 @@ export type NotificationStatus =
 	| 'failed'
 	| 'mute'
 	| 'timeout_reply'
+	| 'cancelled'
 	| 'reacted';
 
 // 백엔드 응답 구조와 일치
@@ -40,6 +41,7 @@ export interface DisplayNotification {
 	actions: string[] | null; // ex) ["승인", "거절"] or null
 	reaction: string | null; // 반응한 리액션 값, 없으면 null
 	isExpired: boolean; // timeout_reply면 true → 버튼 비활성화용
+	isCancelled: boolean; // 요청자가 취소한 경우
 }
 
 function formatTimestamp(dateString: string): string {
@@ -69,6 +71,7 @@ export function transformNotification(apiData: NotificationApiResponse): Display
 		actions: apiData.actions,
 		reaction: apiData.reaction,
 		isExpired: apiData.status === 'timeout_reply',
+		isCancelled: apiData.status === 'cancelled',
 	};
 }
 

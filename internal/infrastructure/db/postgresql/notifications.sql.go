@@ -275,26 +275,23 @@ func (q *Queries) SaveReaction(ctx context.Context, arg SaveReactionParams) erro
 	return err
 }
 
-const saveReactionIfNotExpired = `-- name: SaveReactionIfNotExpired :one
+const saveReactionIfActive = `-- name: SaveReactionIfActive :exec
 UPDATE notifications
 SET reaction = $2,
     reaction_at = now(),
     status = 'reacted'
 WHERE id = $1
-  AND status != 'expired'
-RETURNING status
+  AND status NOT IN ('timeout_reply', 'cancelled')
 `
 
-type SaveReactionIfNotExpiredParams struct {
+type SaveReactionIfActiveParams struct {
 	ID       uuid.UUID
 	Reaction *string
 }
 
-func (q *Queries) SaveReactionIfNotExpired(ctx context.Context, arg SaveReactionIfNotExpiredParams) (*string, error) {
-	row := q.db.QueryRow(ctx, saveReactionIfNotExpired, arg.ID, arg.Reaction)
-	var status *string
-	err := row.Scan(&status)
-	return status, err
+func (q *Queries) SaveReactionIfActive(ctx context.Context, arg SaveReactionIfActiveParams) error {
+	_, err := q.db.Exec(ctx, saveReactionIfActive, arg.ID, arg.Reaction)
+	return err
 }
 
 const updateStatusNotification = `-- name: UpdateStatusNotification :exec
