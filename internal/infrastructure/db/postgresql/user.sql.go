@@ -7,7 +7,6 @@ package postgresql
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -23,30 +22,23 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const findUserById = `-- name: FindUserById :one
-SELECT id, email, created_at, updated_at, terms_agreed, guest
+SELECT id, email, provider, provider_id, guest, terms_agreed, created_at, updated_at
 FROM users
 WHERE id = $1
 `
 
-type FindUserByIdRow struct {
-	ID          uuid.UUID
-	Email       *string
-	CreatedAt   time.Time
-	UpdatedAt   *time.Time
-	TermsAgreed bool
-	Guest       bool
-}
-
-func (q *Queries) FindUserById(ctx context.Context, id uuid.UUID) (FindUserByIdRow, error) {
+func (q *Queries) FindUserById(ctx context.Context, id uuid.UUID) (User, error) {
 	row := q.db.QueryRow(ctx, findUserById, id)
-	var i FindUserByIdRow
+	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
+		&i.Provider,
+		&i.ProviderID,
+		&i.Guest,
+		&i.TermsAgreed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.TermsAgreed,
-		&i.Guest,
 	)
 	return i, err
 }
@@ -54,7 +46,7 @@ func (q *Queries) FindUserById(ctx context.Context, id uuid.UUID) (FindUserByIdR
 const insertGuestUser = `-- name: InsertGuestUser :one
 INSERT INTO users (guest, terms_agreed)
 VALUES (true, true)
-RETURNING id, email, guest, terms_agreed, created_at, updated_at
+RETURNING id, email, provider, provider_id, guest, terms_agreed, created_at, updated_at
 `
 
 func (q *Queries) InsertGuestUser(ctx context.Context) (User, error) {
@@ -63,6 +55,8 @@ func (q *Queries) InsertGuestUser(ctx context.Context) (User, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
+		&i.Provider,
+		&i.ProviderID,
 		&i.Guest,
 		&i.TermsAgreed,
 		&i.CreatedAt,
@@ -82,21 +76,30 @@ func (q *Queries) UpdateUserTermsAgreed(ctx context.Context, id uuid.UUID) error
 	return err
 }
 
-const upsertUserByEmail = `-- name: UpsertUserByEmail :one
-INSERT INTO users (email, updated_at)
-VALUES ($1, now())
-ON CONFLICT (email) 
-DO UPDATE SET 
+const upsertUserByProvider = `-- name: UpsertUserByProvider :one
+INSERT INTO users (provider, provider_id, email, updated_at)
+VALUES ($1, $2, $3, now())
+ON CONFLICT (provider, provider_id)
+DO UPDATE SET
+    email = COALESCE(EXCLUDED.email, users.email),
     updated_at = EXCLUDED.updated_at
-RETURNING id, email, guest, terms_agreed, created_at, updated_at
+RETURNING id, email, provider, provider_id, guest, terms_agreed, created_at, updated_at
 `
 
-func (q *Queries) UpsertUserByEmail(ctx context.Context, email *string) (User, error) {
-	row := q.db.QueryRow(ctx, upsertUserByEmail, email)
+type UpsertUserByProviderParams struct {
+	Provider   *string
+	ProviderID *string
+	Email      *string
+}
+
+func (q *Queries) UpsertUserByProvider(ctx context.Context, arg UpsertUserByProviderParams) (User, error) {
+	row := q.db.QueryRow(ctx, upsertUserByProvider, arg.Provider, arg.ProviderID, arg.Email)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
+		&i.Provider,
+		&i.ProviderID,
 		&i.Guest,
 		&i.TermsAgreed,
 		&i.CreatedAt,

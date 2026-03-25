@@ -111,7 +111,18 @@ func (s *AuthService) OauthGithubFlow(ctx context.Context, code string) (at stri
 	if err != nil {
 		return at, rt, err
 	}
-	dbUser, err := s.userService.UpsertUserByEmail(ctx, githubUser.Email) // TODO: 이메일이 없을 수도 있음
+
+	var emailPtr *string
+	if githubUser.Email != "" {
+		emailPtr = &githubUser.Email
+	} else {
+		// 만약 email이 없으면 github userid를 사용
+		// email 컬럼의 용도가 모호해지지만 email을 단순 유저식별용으로 쓰고 있어서 괜찮다고 판단.
+		emailPtr = &githubUser.Login
+	}
+
+	providerID := fmt.Sprintf("%d", githubUser.ID)
+	dbUser, err := s.userService.UpsertByProvider(ctx, "github", providerID, emailPtr)
 	if err != nil {
 		return at, rt, err
 	}

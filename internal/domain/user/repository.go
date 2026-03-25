@@ -11,7 +11,7 @@ type userRepository struct {
 	queries *db.Queries
 }
 type UserRepository interface {
-	UpsertUserByEmail(context.Context, string) (*User, error)
+	UpsertUserByProvider(ctx context.Context, provider, providerID string, email *string) (*User, error)
 	InsertGuestUser(context.Context) (*User, error)
 	FindByID(context.Context, uuid.UUID) (*User, error)
 	TermsAgree(context.Context, uuid.UUID) error
@@ -24,28 +24,22 @@ func NewUserRepository(queries *db.Queries) UserRepository {
 	}
 }
 func (r *userRepository) DeleteByID(ctx context.Context, userID uuid.UUID) error {
-	//cascade 로 관련 테이블 데이터 같이 제거됨.
-	// Endpoints, Push_tokens, Notifications
 	return r.queries.DeleteUser(ctx, userID)
 }
 func (r *userRepository) TermsAgree(ctx context.Context, userID uuid.UUID) error {
-
 	return r.queries.UpdateUserTermsAgreed(ctx, userID)
 }
-func (r *userRepository) UpsertUserByEmail(ctx context.Context, email string) (*User, error) {
-	// TODO: github oauth에서 email도 변경될 수가 있음
-	user, err := r.queries.UpsertUserByEmail(ctx, &email)
+
+func (r *userRepository) UpsertUserByProvider(ctx context.Context, provider, providerID string, email *string) (*User, error) {
+	user, err := r.queries.UpsertUserByProvider(ctx, db.UpsertUserByProviderParams{
+		Provider:   &provider,
+		ProviderID: &providerID,
+		Email:      email,
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	entity := &User{
-		ID:          user.ID,
-		Email:       user.Email,
-		CreatedAt:   user.CreatedAt,
-		TermsAgreed: user.TermsAgreed,
-	}
-	return entity, nil
+	return toEntity(user), nil
 }
 
 func (r *userRepository) InsertGuestUser(ctx context.Context) (*User, error) {
@@ -53,15 +47,7 @@ func (r *userRepository) InsertGuestUser(ctx context.Context) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	entity := &User{
-		ID:          user.ID,
-		Email:       user.Email,
-		CreatedAt:   user.CreatedAt,
-		TermsAgreed: user.TermsAgreed,
-		IsGuest:     user.Guest,
-	}
-	return entity, nil
+	return toEntity(user), nil
 }
 
 func (r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (*User, error) {
@@ -73,12 +59,17 @@ func (r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (*User, err
 		return nil, err
 	}
 
-	entity := &User{
+	return toEntity(user), nil
+}
+
+func toEntity(user db.User) *User {
+	return &User{
 		ID:          user.ID,
 		Email:       user.Email,
+		Provider:    user.Provider,
+		ProviderID:  user.ProviderID,
 		CreatedAt:   user.CreatedAt,
 		TermsAgreed: user.TermsAgreed,
 		IsGuest:     user.Guest,
 	}
-	return entity, nil
 }

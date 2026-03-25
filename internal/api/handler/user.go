@@ -79,7 +79,7 @@ func (h *UserHandler) Whoami(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.service.FindByEmail(ctx, userClaim.UserID)
+	user, err := h.service.FindByID(ctx, userClaim.UserID)
 	if err != nil {
 		wrapper.RespondError(w, err)
 		return
