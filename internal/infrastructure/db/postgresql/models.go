@@ -48,6 +48,8 @@ type PushToken struct {
 type User struct {
 	ID          uuid.UUID
 	Email       *string
+	Provider    *string
+	ProviderID  *string
 	Guest       bool
 	TermsAgreed bool
 	CreatedAt   time.Time

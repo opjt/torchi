@@ -49,8 +49,8 @@ handler/api.go
     → sse/broker.go:Publish
 
 handler/auth.go
-  → auth/service.go:GithubLogin, GuestLogin, Refresh
-    → user/service.go:UpsertUserByEmail, UpsertGuestUser
+  → auth/service.go:OauthGithubFlow, GuestLogin, Refresh
+    → user/service.go:UpsertByProvider, UpsertGuestUser
     → pkg/token:CreatePairToken, Validate
 
 handler/subscription.go
