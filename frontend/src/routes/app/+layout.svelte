@@ -3,9 +3,11 @@
 	import { page } from '$app/stores';
 	import { push } from '$lib/client/pushManager.svelte';
 	import { auth, hasAgreedToTerms } from '$lib/client/auth/auth';
-	import { onMount } from 'svelte';
+	import { onMount, setContext } from 'svelte';
 
 	let { children } = $props();
+	let scrollRoot = $state<HTMLElement | null>(null);
+	setContext('scrollRoot', () => scrollRoot);
 
 	const { ready } = auth;
 	let shouldShowContent = $state(false);
@@ -56,7 +58,7 @@
 			<button
 				type="button"
 				onclick={() => push.handleSubscribe()}
-				class="top-0 bg-warning text-warning-content px-6 py-3.5 sticky z-10 flex w-full items-center justify-between"
+				class="bg-warning text-warning-content px-6 py-3.5 z-10 flex w-full items-center justify-between"
 			>
 				<div class="gap-3 flex items-center">
 					<span class="h-2 w-2 relative flex">
@@ -77,12 +79,7 @@
 			</button>
 		{/if}
 
-		<!-- <div class="flex-1 overflow-y-auto">
-			<div class="max-w-3xl px-0 md:px-4 font-sans text-base-content mx-auto flex flex-col">
-				{@render children()}
-			</div>
-		</div> -->
-		<div class="flex-1">
+		<div class="flex-1 overflow-y-auto" bind:this={scrollRoot}>
 			<div class="max-w-3xl px-0 md:px-4 mx-auto flex flex-col">
 				{@render children()}
 			</div>

@@ -12,7 +12,7 @@
 	import { auth } from '$lib/client/auth/auth';
 	import { debugLog, linkify } from '$lib/pkg/util';
 	import { BellOff, ChevronDown, ChevronLeft, Clock, Search, Settings, X } from 'lucide-svelte';
-	import { onMount, tick } from 'svelte';
+	import { getContext, onMount, tick } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
 
@@ -32,6 +32,9 @@
 
 	// 관찰할 하단 요소
 	let observerTarget = $state<HTMLElement | null>(null);
+
+	// 스크롤 컨테이너 (layout에서 제공)
+	const getScrollRoot = getContext<() => HTMLElement | null>('scrollRoot');
 
 	// 엔드포인트 목록
 	let endpoints = $state<Endpoint[]>([]);
@@ -111,7 +114,7 @@
 				notifications = newItems;
 				await tick();
 
-				window.scrollTo({ top: 0, behavior: 'instant' });
+				getScrollRoot()?.scrollTo({ top: 0, behavior: 'instant' });
 			} else {
 				notifications = [...notifications, ...newItems];
 			}
@@ -145,7 +148,7 @@
 					loadNotifications();
 				}
 			},
-			{ threshold: 0.1, rootMargin: '100px' },
+			{ root: getScrollRoot(), threshold: 0.1, rootMargin: '100px' },
 		);
 
 		observer.observe(observerTarget);
