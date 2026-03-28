@@ -8,6 +8,7 @@ import (
 	"torchi/internal/api/wrapper"
 	"torchi/internal/domain/common"
 	"torchi/internal/domain/notifications"
+	"torchi/internal/domain/push"
 	"torchi/internal/pkg/config"
 	"torchi/internal/pkg/log"
 	"torchi/internal/pkg/token"
@@ -19,6 +20,7 @@ import (
 type NotiHandler struct {
 	log     *log.Logger
 	service *notifications.NotiService
+	waitMap *push.WaitMap
 }
 
 func NewNotiHandler(
@@ -26,10 +28,12 @@ func NewNotiHandler(
 	env config.Env,
 
 	service *notifications.NotiService,
+	waitMap *push.WaitMap,
 ) *NotiHandler {
 	return &NotiHandler{
 		log:     log,
 		service: service,
+		waitMap: waitMap,
 	}
 }
 func (h *NotiHandler) Routes() chi.Router {
@@ -55,6 +59,10 @@ func (h *NotiHandler) Delete(ctx context.Context, _ interface{}) (interface{}, e
 
 	if err := h.service.MarkDelete(ctx, userClaim.UserID, parsed); err != nil {
 		return nil, err
+	}
+
+	if ch, ok := h.waitMap.Get(parsed.String()); ok {
+		ch <- push.WaitResult{Deleted: true}
 	}
 
 	return nil, nil
