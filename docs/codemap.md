@@ -2,7 +2,7 @@
 
 ## 라우트 구조 (router.go)
 
-```
+```text
 /api/
 ├── /health            → handler/health.go:Check
 ├── /v1 (Rate Limit)   → handler/api.go
@@ -40,7 +40,7 @@
 
 ## 도메인 의존성
 
-```
+```text
 handler/api.go
   → push/service.go:Push, PushAndWait, React
     → endpoint/service.go:FindByToken
@@ -69,7 +69,7 @@ handler/sse.go
 
 ## 프론트엔드 ↔ 백엔드 매핑
 
-```
+```text
 frontend/src/lib/api/
 ├── endpoints.ts
 │   ├── addEndpoint()      → POST /endpoints
@@ -93,7 +93,7 @@ frontend/src/lib/api/
 
 ## 페이지 → API 사용
 
-```
+```text
 routes/app/+page.svelte (알림 목록)
   → notifications.ts: getNotifications, markAsReadUntil, deleteNotification, postReaction
   → endpoints.ts: fetchEndpoints
@@ -117,7 +117,7 @@ routes/app/guide/+page.svelte (가이드)
 
 ## DTO 매핑 (알림)
 
-```
+```text
 DB: notifications 테이블
   → notifications/entity.go:Noti
   → handler/notification.go:resNoti (JSON 응답)
@@ -130,7 +130,7 @@ DB: notifications 테이블
 
 ## 핵심 흐름: 푸시 발송
 
-```
+```text
 POST /api/v1/push/{token} -d 'msg=hello'
   1. handler/api.go:Push
   2. push/service.go:Push
@@ -144,7 +144,7 @@ POST /api/v1/push/{token} -d 'msg=hello'
 
 ## 핵심 흐름: 리액션 대기 (ask)
 
-```
+```text
 POST /api/v1/push/{token}/ask -d 'msg=배포?' -d 'actions=승인,거절' -d 'timeout=300'
   1. handler/api.go:Ask → push/service.go:PushAndWait
   2. 푸시 발송 (위와 동일)
@@ -157,7 +157,7 @@ POST /api/v1/push/{token}/ask -d 'msg=배포?' -d 'actions=승인,거절' -d 'ti
 
 ## DB 관계
 
-```
+```text
 users (1) ──→ (*) push_tokens    ON DELETE CASCADE
       (1) ──→ (*) endpoints      ON DELETE CASCADE
       (1) ──→ (*) notifications  ON DELETE CASCADE

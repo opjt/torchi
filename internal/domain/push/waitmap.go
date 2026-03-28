@@ -2,22 +2,27 @@ package push
 
 import "sync"
 
+type WaitResult struct {
+	Reaction string
+	Deleted  bool
+}
+
 type WaitMap struct {
 	mu sync.Mutex
-	m  map[string]chan string
+	m  map[string]chan WaitResult
 }
 
 func NewWaitMap() *WaitMap {
-	return &WaitMap{m: make(map[string]chan string)}
+	return &WaitMap{m: make(map[string]chan WaitResult)}
 }
 
-func (w *WaitMap) Set(id string, ch chan string) {
+func (w *WaitMap) Set(id string, ch chan WaitResult) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	w.m[id] = ch
 }
 
-func (w *WaitMap) Get(id string) (chan string, bool) {
+func (w *WaitMap) Get(id string) (chan WaitResult, bool) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	ch, ok := w.m[id]

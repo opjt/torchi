@@ -25,6 +25,7 @@ var (
 	ErrInvalidParam   = NewError(400, "INVALID_PARAMETER")
 	ErrInternalServer = NewError(500, "INTERNAL_SERVER_ERROR")
 
-	ErrUserNotFound     = NewError(404, "USER_NOT_FOUND")
-	ErrEndpointNotFound = NewError(404, "ENDPOINT_NOT_FOUND")
+	ErrUserNotFound          = NewError(404, "USER_NOT_FOUND")
+	ErrEndpointNotFound      = NewError(404, "ENDPOINT_NOT_FOUND")
+	ErrNotificationDeleted   = NewError(410, "NOTIFICATION_DELETED")
 )

@@ -37,6 +37,7 @@ func NewPushService(
 	endpointService *endpoint.EndpointService,
 	notiService *notifications.NotiService,
 	sseBroker *sse.Broker,
+	waitMap *WaitMap,
 ) *PushService {
 	return &PushService{
 		log:             log,
@@ -45,7 +46,7 @@ func NewPushService(
 		endpointService: endpointService,
 		notiService:     notiService,
 		sseBroker:       sseBroker,
-		waitMap:         NewWaitMap(), // TODO: FX로 주입
+		waitMap:         waitMap,
 	}
 }
 
@@ -238,7 +239,7 @@ func (s *PushService) PushAndWait(ctx context.Context, endpointToken string, mes
 	}
 
 	// 채널 등록 후 대기
-	ch := make(chan string, 1)
+	ch := make(chan WaitResult, 1)
 	s.waitMap.Set(noti.ID.String(), ch)
 	reacted := false
 	cancelled := false
@@ -268,9 +269,12 @@ func (s *PushService) PushAndWait(ctx context.Context, endpointToken string, mes
 	}()
 
 	select {
-	case reaction := <-ch:
+	case result := <-ch:
 		reacted = true
-		return reaction, nil
+		if result.Deleted {
+			return "", common.ErrNotificationDeleted
+		}
+		return result.Reaction, nil
 	case <-ctx.Done():
 		if errors.Is(ctx.Err(), context.Canceled) {
 			cancelled = true
@@ -288,11 +292,12 @@ func (s *PushService) React(ctx context.Context, notiID uuid.UUID, reaction stri
 	}
 
 	if ch, ok := s.waitMap.Get(notiID.String()); ok {
-		ch <- reaction
+		ch <- WaitResult{Reaction: reaction}
 	}
 
 	return nil
 }
+
 
 func (s *PushService) publishSSE(userID uuid.UUID, noti notifications.Noti, endpointName string) {
 	s.sseBroker.Publish(userID, sse.SSEEvent{
