@@ -96,3 +96,9 @@ func (rw *responseWriter) WriteHeader(code int) {
 		rw.ResponseWriter.WriteHeader(code)
 	}
 }
+
+func (rw *responseWriter) Flush() {
+	if f, ok := rw.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
