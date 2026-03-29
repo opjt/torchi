@@ -105,3 +105,12 @@ func TestDuration_SSEExcluded(t *testing.T) {
 	}
 }
 
+func TestMetricsEndpointExcluded(t *testing.T) {
+	m, reg := setup()
+	request(m, "/metrics", "/metrics")
+
+	if hasRequestCount(reg, "/metrics") {
+		t.Error("/metrics 스크레이핑은 집계되면 안 됨")
+	}
+}
+

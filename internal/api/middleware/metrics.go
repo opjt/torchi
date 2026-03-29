@@ -60,6 +60,10 @@ func (m *Metrics) Middleware() func(http.Handler) http.Handler {
 				path = r.URL.Path
 			}
 
+			if path == "/metrics" {
+				return
+			}
+
 			status := strconv.Itoa(ww.status)
 			duration := time.Since(start).Seconds()
 
