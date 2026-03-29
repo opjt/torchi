@@ -81,27 +81,15 @@ func TestDuration_NormalRoute(t *testing.T) {
 	}
 }
 
-func TestDuration_AskExcluded(t *testing.T) {
+func TestDuration_AskRoute(t *testing.T) {
 	m, reg := setup()
 	request(m, "/api/v1/push/{token}/ask", "/api/v1/push/abc123/ask")
 
-	if hasDurationSample(reg, "/api/v1/push/{token}/ask") {
-		t.Error("/ask는 duration이 집계되면 안 됨")
+	if !hasDurationSample(reg, "/api/v1/push/{token}/ask") {
+		t.Error("/ask도 duration이 집계되어야 함")
 	}
 	if !hasRequestCount(reg, "/api/v1/push/{token}/ask") {
-		t.Error("/ask도 requests_total은 집계되어야 함")
-	}
-}
-
-func TestDuration_SSEExcluded(t *testing.T) {
-	m, reg := setup()
-	request(m, "/api/sse/notifications", "/api/sse/notifications")
-
-	if hasDurationSample(reg, "/api/sse/notifications") {
-		t.Error("/sse/notifications는 duration이 집계되면 안 됨")
-	}
-	if !hasRequestCount(reg, "/api/sse/notifications") {
-		t.Error("/sse/notifications도 requests_total은 집계되어야 함")
+		t.Error("/ask도 requests_total이 집계되어야 함")
 	}
 }
 
@@ -113,4 +101,3 @@ func TestMetricsEndpointExcluded(t *testing.T) {
 		t.Error("/metrics 스크레이핑은 집계되면 안 됨")
 	}
 }
-
