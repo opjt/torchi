@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/fx"
 )
 
@@ -25,12 +26,16 @@ func NewRouter(
 	env config.Env,
 
 	limitMiddleware *middle.RateLimiterManager,
+	m *middle.Metrics,
 ) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middle.CorsMiddleware(env.FrontUrl))
+	r.Use(m.Middleware())
+
+	r.Handle("/metrics", promhttp.Handler())
 
 	// 정적 파일 서빙 (standalone 빌드 시에만 활성화)
 	if h := staticHandler(); h != nil {
@@ -74,5 +79,6 @@ var routeModule = fx.Module("router",
 	fx.Provide(NewRouter),
 	fx.Provide(
 		middle.NewRateLimiterManager,
+		middle.NewMetrics,
 	),
 )
