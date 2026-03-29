@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -43,8 +44,7 @@ func (m *Metrics) Middleware() func(http.Handler) http.Handler {
 			defer m.requestsInFlight.Dec()
 
 			start := time.Now()
-			ww := &responseWriter{ResponseWriter: w, status: http.StatusOK}
-
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 			next.ServeHTTP(ww, r)
 
 			path := chi.RouteContext(r.Context()).RoutePattern()
@@ -56,28 +56,8 @@ func (m *Metrics) Middleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			m.requestsTotal.WithLabelValues(r.Method, path, strconv.Itoa(ww.status)).Inc()
+			m.requestsTotal.WithLabelValues(r.Method, path, strconv.Itoa(ww.Status())).Inc()
 			m.requestDuration.WithLabelValues(r.Method, path).Observe(time.Since(start).Seconds())
 		})
-	}
-}
-
-type responseWriter struct {
-	http.ResponseWriter
-	status      int
-	wroteHeader bool
-}
-
-func (rw *responseWriter) WriteHeader(code int) {
-	if !rw.wroteHeader {
-		rw.status = code
-		rw.wroteHeader = true
-		rw.ResponseWriter.WriteHeader(code)
-	}
-}
-
-func (rw *responseWriter) Flush() {
-	if f, ok := rw.ResponseWriter.(http.Flusher); ok {
-		f.Flush()
 	}
 }
